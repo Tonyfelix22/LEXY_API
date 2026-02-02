@@ -1,0 +1,4 @@
+## Root requirements for Railway / Railpack
+## Delegate to the backend requirements file used by the Django API.
+-r LEXIE_ERP/Backend/requirements.txt
+
