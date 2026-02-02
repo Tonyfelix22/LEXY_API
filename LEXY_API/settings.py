@@ -23,16 +23,35 @@ INSTALLED_APPS = [
 ROOT_URLCONF = 'LEXY_API.urls'
 WSGI_APPLICATION = 'LEXY_API.wsgi.application'
 
+# Database Configuration - Supports Railway Postgres environment variables
+# Railway provides: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD
+# Or DATABASE_URL format: postgresql://user:password@host:port/database
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'LEXYDB'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
+        'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
+        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
     }
 }
+
+# If DATABASE_URL is provided (Railway sometimes uses this), parse it
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    # Parse DATABASE_URL format: postgresql://user:password@host:port/database
+    import urllib.parse
+    result = urllib.parse.urlparse(database_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': result.path[1:] if result.path else os.getenv('PGDATABASE', 'postgres'),
+        'USER': result.username or os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': result.password or os.getenv('PGPASSWORD', ''),
+        'HOST': result.hostname or os.getenv('PGHOST', 'localhost'),
+        'PORT': result.port or os.getenv('PGPORT', '5432'),
+    }
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
