@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 
 # Frontend URL configuration - define early to avoid NameError
+# This MUST be defined before any usage in CORS configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 
 # Add to INSTALLED_APPS
