@@ -9,11 +9,14 @@ let configPromise: Promise<string> | null = null;
 
 export function getBaseUrl(): Promise<string> {
     if (typeof window === "undefined") {
-        const env =
+        const envBase =
             (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_API) ||
             (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
             DEFAULT_BASE;
-        return Promise.resolve(env);
+        // Apply same cleaning logic server-side
+        const cleanBase = envBase.replace(/\/+$/, "");
+        const finalBase = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
+        return Promise.resolve(finalBase);
     }
     if (cachedBase) return Promise.resolve(cachedBase);
     if (configPromise) return configPromise;
@@ -23,8 +26,9 @@ export function getBaseUrl(): Promise<string> {
         .then((data: { baseApi?: string } | null) => {
             const base = data?.baseApi?.trim();
             if (base) {
-                // Don't add /api if it already ends with /api
-                cachedBase = base.endsWith("/api") ? base : base.replace(/\/?$/, "") + "/api";
+                // Remove trailing slash and ensure it ends with /api
+                const cleanBase = base.replace(/\/+$/, "");
+                cachedBase = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
                 return cachedBase;
             }
             cachedBase =
@@ -34,10 +38,13 @@ export function getBaseUrl(): Promise<string> {
             return cachedBase;
         })
         .catch(() => {
-            cachedBase =
+            const fallbackBase = 
                 (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_API) ||
                 (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
                 DEFAULT_BASE;
+            // Apply same cleaning logic to fallback
+            const cleanBase = fallbackBase.replace(/\/+$/, "");
+            cachedBase = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
             return cachedBase;
         });
 
