@@ -139,6 +139,9 @@ CORS_ALLOW_METHODS = [
 ]
 
 
+# Consolidate Frontend URL detection
+FRONTEND_URL = os.getenv('FRONTEND_URL')
+
 # CORS Configuration - Support both local development and Railway deployment
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -155,35 +158,18 @@ CORS_ALLOWED_ORIGINS = [
     "https://lexyapi-production.up.railway.app",  # Railway backend itself
 ]
 
+# Add frontend URL from environment variable if provided
+if FRONTEND_URL:
+    for url in FRONTEND_URL.split(','):
+        url = url.strip()
+        if url and url not in CORS_ALLOWED_ORIGINS:
+            if url.startswith('http'):
+                CORS_ALLOWED_ORIGINS.append(url)
+            else:
+                CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
+
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
-
-CORS_ALLOW_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-]
-
-# Allow Vercel preview deployments (*.vercel.app)
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://[a-z0-9-]+\.vercel\.app$",
-    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
-]
-
+...
 # CSRF Configuration
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
@@ -194,15 +180,18 @@ CSRF_TRUSTED_ORIGINS = [
     "https://lexyapi-production.up.railway.app",
 ]
 
-# Add Railway frontend URL to CSRF trusted origins
+# Also trust the FRONTEND_URL for CSRF if provided
 if FRONTEND_URL:
-    if FRONTEND_URL.startswith('http'):
-        CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
-    else:
-        CSRF_TRUSTED_ORIGINS.extend([
-            f"https://{FRONTEND_URL}",
-            f"http://{FRONTEND_URL}"
-        ])
+    for url in FRONTEND_URL.split(','):
+        url = url.strip()
+        if url:
+            if url.startswith('http'):
+                if url not in CSRF_TRUSTED_ORIGINS:
+                    CSRF_TRUSTED_ORIGINS.append(url)
+            else:
+                for proto in ['https://', 'http://']:
+                    if proto + url not in CSRF_TRUSTED_ORIGINS:
+                        CSRF_TRUSTED_ORIGINS.append(proto + url)
 
 
 # CSRF Configuration - Use secure cookies in production (Railway uses HTTPS)
