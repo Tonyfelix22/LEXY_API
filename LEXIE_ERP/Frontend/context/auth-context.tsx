@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getAuthToken, saveAuthToken, clearAuthToken } from "@/utils/token";
+import { getBaseUrl } from "@/utils/config";
 
 interface User {
     id: number;
@@ -39,16 +40,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const RAW_BASE_API = process.env.NEXT_PUBLIC_BASE_API || "http://127.0.0.1:8000/api";
-
     const buildUrl = (base: string, path: string) => {
         const b = base.replace(/\/?$/, "");
         const p = path.startsWith("/") ? path : `/${path}`;
         return `${b}${p}`;
     };
-
-    const BASE_API = RAW_BASE_API;
-    if (typeof window !== "undefined") devLog("API base:", BASE_API);
 
     const safeJson = async (res: Response) => {
         try {
@@ -64,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const fetchUser = async (authToken: string): Promise<User | null> => {
+        const BASE_API = await getBaseUrl();
         const endpoint = buildUrl(BASE_API, "/users/user/");
         devLog("📡 Fetching user from:", endpoint);
 
@@ -146,9 +143,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     body: JSON.stringify({ username, password }),
                 })
             } catch (networkError: any) {
-                console.error("❌ Network error during login fetch:", networkError?.message || networkError)
-                console.error("Hints: Verify NEXT_PUBLIC_BASE_API (", BASE_API, "), server is running, and CORS allows the origin.")
-                throw new Error("Login request failed: unable to reach authentication server.")
+                console.error("❌ Network error during login fetch:", networkError?.message || networkError);
+                const isLocalhostApi = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(BASE_API);
+                const tip = isLocalhostApi
+                    ? " Set NEXT_PUBLIC_BASE_API in .env.local (local) or in Vercel → Settings → Environment Variables (deployed), then redeploy."
+                    : " Check that the API server is running and CORS allows this origin.";
+                throw new Error(
+                    "Cannot reach the API at " + BASE_API + "." + tip
+                );
             }
 
             const data = await safeJson(res)

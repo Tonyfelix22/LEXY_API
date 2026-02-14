@@ -1,19 +1,32 @@
 import { getAuthToken } from "@/utils/token";
+import { getBaseUrl } from "@/utils/config";
 
-/** API base URL (e.g. https://your-api.railway.app/api). Set NEXT_PUBLIC_BASE_API in Vercel for production. */
+const DEFAULT_BASE = "http://127.0.0.1:8000/api";
+
+/** Sync fallback for build-time / non-browser (e.g. generateStaticParams). */
 export const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_API || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+    typeof process !== "undefined"
+        ? (process.env.NEXT_PUBLIC_BASE_API || process.env.NEXT_PUBLIC_API_URL || DEFAULT_BASE)
+        : DEFAULT_BASE;
 
-/** Backend root for media/file URLs (same host as API, without /api). */
+/** Backend root for media/file URLs. Use getBackendRoot() when in browser for runtime config. */
 export const BACKEND_ROOT = BASE_URL.replace(/\/api\/?$/, "") || "http://127.0.0.1:8000";
 
 export async function apiFetch(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<any> {
-    const url = endpoint.startsWith("http")
-        ? endpoint
-        : `${BASE_URL}${endpoint}`;
+    const base = await getBaseUrl();
+    let url: string;
+    
+    if (endpoint.startsWith("http")) {
+        url = endpoint;
+    } else {
+        // Remove trailing slash from base and leading slash from endpoint to avoid double slashes
+        const cleanBase = base.replace(/\/?$/, "");
+        const cleanEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+        url = `${cleanBase}/${cleanEndpoint}`;
+    }
 
     const token = getAuthToken();
 
