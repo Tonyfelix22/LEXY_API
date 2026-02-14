@@ -119,7 +119,21 @@ TEMPLATES = [
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
-CORS_ALLOW_CREDENTIALS = True
+
+# FORCE CORS for Railway deployment - always allow all origins
+# This ensures CORS works regardless of environment detection
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
+CORS_ALLOW_ALL_HEADERS = True
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+    "HEAD",
+]
 
 CORS_ALLOW_HEADERS = [
     "accept",
