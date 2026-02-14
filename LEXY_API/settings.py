@@ -34,6 +34,10 @@ INSTALLED_APPS = [
 ROOT_URLCONF = 'LEXY_API.urls'
 WSGI_APPLICATION = 'LEXY_API.wsgi.application'
 
+# Database Configuration - Supports Railway Postgres environment variables
+# Railway provides: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD
+# Or DATABASE_URL format: postgresql://user:password@host:port/database
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
