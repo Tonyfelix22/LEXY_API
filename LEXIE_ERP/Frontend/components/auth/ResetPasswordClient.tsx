@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch as api } from "@/utils/api";
 import toast from "react-hot-toast";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function ResetPasswordClient() {
@@ -11,7 +11,9 @@ export default function ResetPasswordClient() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
-    const params = useParams();
+    const searchParams = useSearchParams();
+    const uid = searchParams.get("uid");
+    const token = searchParams.get("token");
 
     // Fix for hydration mismatch
     const [isMounted, setIsMounted] = useState(false);
@@ -38,8 +40,8 @@ export default function ResetPasswordClient() {
             await api("/users/reset_password_confirm/", {
                 method: "POST",
                 body: JSON.stringify({
-                    uid: params.uid,
-                    token: params.token,
+                    uid: uid,
+                    token: token,
                     new_password: newPassword,
                     re_new_password: confirmPassword,
                 }),

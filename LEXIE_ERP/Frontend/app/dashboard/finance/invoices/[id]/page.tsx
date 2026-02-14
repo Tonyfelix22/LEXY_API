@@ -15,8 +15,8 @@ export async function generateStaticParams() {
         }
         return [];
     } catch (error) {
-        console.error("Failed to generate static params for invoices:", error);
-        return [{ id: '1' }];
+        console.warn("Could not generate static params for invoices (backend might be down). Falling back to placeholder.");
+        return [{ id: "_" }];
     }
 }
 
