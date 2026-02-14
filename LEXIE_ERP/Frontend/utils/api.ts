@@ -23,9 +23,12 @@ export async function apiFetch(
         url = endpoint;
     } else {
         // Remove trailing slash from base and leading slash from endpoint to avoid double slashes
-        const cleanBase = base.replace(/\/?$/, "");
+        const cleanBase = base.replace(/\/+$/, ""); // Remove multiple trailing slashes
         const cleanEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
         url = `${cleanBase}/${cleanEndpoint}`;
+        
+        // Additional normalization: replace any double slashes in the final URL
+        url = url.replace(/\/+/g, "/");
     }
 
     const token = getAuthToken();
