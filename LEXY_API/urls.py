@@ -17,6 +17,7 @@ Including another URLconf
 
 # ============================================
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include, re_path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -43,7 +44,7 @@ urlpatterns = [
     path('api/reports/', include('reports.urls')),
     path('api/notifications/', include('notifications.urls')),
     
-    # Serve frontend at root - catch-all for Next.js static export
-    re_path(r'^(?P<path>.*)$', frontend_views.serve_frontend),
+    # Root path - simple health check
+    path('', lambda request: HttpResponse("LEXY API Backend - Running", content_type="text/plain")),
 ]
 
