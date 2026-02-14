@@ -1,22 +1,20 @@
 import { apiFetch } from "@/utils/api";
 import ReviewDetailsClient from "@/components/hr/ReviewDetailsClient";
 
+const FALLBACK_PARAMS = [{ id: "_" }];
+
 export async function generateStaticParams() {
     try {
         const reviews = await apiFetch("/hr/performance-reviews/");
-        if (Array.isArray(reviews)) {
-            return reviews.map((review: any) => ({
-                id: review.id.toString(),
-            }));
-        } else if (reviews && reviews.results && Array.isArray(reviews.results)) {
-            return reviews.results.map((review: any) => ({
-                id: review.id.toString(),
-            }));
+        if (Array.isArray(reviews) && reviews.length > 0) {
+            return reviews.map((review: any) => ({ id: review.id.toString() }));
         }
-        return [];
-    } catch (error) {
-        console.warn("Could not generate static params for reviews (backend might be down during build). Falling back to placeholder.");
-        return [{ id: "_" }];
+        if (reviews?.results && Array.isArray(reviews.results) && reviews.results.length > 0) {
+            return reviews.results.map((review: any) => ({ id: review.id.toString() }));
+        }
+        return FALLBACK_PARAMS;
+    } catch {
+        return FALLBACK_PARAMS;
     }
 }
 
