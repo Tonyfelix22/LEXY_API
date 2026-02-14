@@ -132,6 +132,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const login = async (username: string, password: string): Promise<User> => {
         setIsLoading(true);
         try {
+            const BASE_API = await getBaseUrl();
             const endpoint = buildUrl(BASE_API, "/users/login/");
             devLog("🔑 Login attempt:", username, "→", endpoint);
 
@@ -193,6 +194,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const loginWithToken = async (incomingToken: string): Promise<User> => {
         setIsLoading(true);
         try {
+            const BASE_API = await getBaseUrl();
             devLog("🔑 Logging in with token...");
             saveAuthToken(incomingToken);
             setToken(incomingToken);
@@ -214,13 +216,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const logout = async () => {
+    const logout = async (): Promise<void> => {
+        const token = getAuthToken();
         if (!token) {
             devLog("ℹ️ No token to logout");
             return;
         }
 
         try {
+            const BASE_API = await getBaseUrl();
             const endpoint = `${BASE_API}/users/logout/`;
             devLog("🚪 Logging out...");
 
