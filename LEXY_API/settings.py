@@ -37,13 +37,28 @@ WSGI_APPLICATION = 'LEXY_API.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'LEXYDB'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
+        'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
+        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
     }
 }
+
+# If DATABASE_URL is provided (Railway sometimes uses this), parse it
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    # Parse DATABASE_URL format: postgresql://user:password@host:port/database
+    import urllib.parse
+    result = urllib.parse.urlparse(database_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': result.path[1:] if result.path else os.getenv('PGDATABASE', 'postgres'),
+        'USER': result.username or os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': result.password or os.getenv('PGPASSWORD', ''),
+        'HOST': result.hostname or os.getenv('PGHOST', 'localhost'),
+        'PORT': result.port or os.getenv('PGPORT', '5432'),
+    }
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -92,7 +107,8 @@ TEMPLATES = [
         },
     },
 ]
-DEBUG = True
+# Debug mode - disable in production
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 CORS_ALLOW_CREDENTIALS = True
@@ -106,17 +122,83 @@ CORS_ALLOW_HEADERS = [
     "origin",
     "user-agent",
     "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
 ]
 
 
+# CORS Configuration - Support both local development and Railway deployment
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",# React local dev
     "http://192.168.0.105:3000",
     "http://192.168.0.105:8000",
     "http://192.168.0.105:3001",
-    "http://192.168.2.23:3000"
+    "http://192.168.2.23:3000",
+    "https://lexy-api.vercel.app",  # Add your Vercel frontend
+    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",  # Current Vercel preview
 ]
+
+# Add frontend URL(s) from environment variable (Vercel, Railway, etc.)
+FRONTEND_URL = os.getenv('FRONTEND_URL')
+if FRONTEND_URL:
+    for url in FRONTEND_URL.split(','):
+        url = url.strip()
+        if not url:
+            continue
+        if url.startswith('http'):
+            CORS_ALLOWED_ORIGINS.append(url)
+        else:
+            CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
+
+# Allow Vercel preview and production deployments (*.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[a-z0-9-]+\.vercel\.app$",
+    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",  # preview deployments
+]
+
+# Allow all Railway domains in production (more permissive, adjust for security)
+# Railway domains end with .railway.app
+# Detect Railway environment using multiple indicators
+is_railway = (
+    os.getenv('RAILWAY_ENVIRONMENT') or 
+    os.getenv('RAILWAY_ENVIRONMENT') == 'production' or
+    os.getenv('RAILWAY_PUBLIC_DOMAIN') or  # Railway sets this
+    os.getenv('RAILWAY_SERVICE_NAME') or  # Railway sets this
+    'railway.app' in os.getenv('RAILWAY_PUBLIC_DOMAIN', '')  # Check domain
+)
+
+# Additional fallback: if domain contains railway.app, enable CORS
+current_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
+if 'railway.app' in current_domain or is_railway:
+    CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in Railway environment
+    CORS_ALLOW_CREDENTIALS = False  # Disable credentials for security when allowing all origins
+    CORS_ALLOW_ALL_HEADERS = True  # Allow all headers
+    CORS_ALLOW_METHODS = [
+        "GET",
+        "POST", 
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+        "HEAD",
+    ]
+    # Force CORS headers for all responses
+    CORS_EXPOSE_HEADERS = [
+        "Content-Type",
+        "X-CSRFToken",
+        "Authorization",
+    ]
+else:
+    CORS_ALLOW_ALL_ORIGINS = False  # Keep explicit list for local development
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
@@ -125,12 +207,24 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3001",
     "http://192.168.0.113:3000",
     "http://192.168.0.113:3001",
-    "http://192.168.2.23:3000"
-
+    "http://192.168.2.23:3000",
+    "https://lexy-api.vercel.app",  # Add your Vercel frontend
+    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",  # Current Vercel preview
 ]
 
+# Add Railway frontend URL to CSRF trusted origins
+if FRONTEND_URL:
+    if FRONTEND_URL.startswith('http'):
+        CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
+    else:
+        CSRF_TRUSTED_ORIGINS.extend([
+            f"https://{FRONTEND_URL}",
+            f"http://{FRONTEND_URL}"
+        ])
 
-CSRF_COOKIE_SECURE = False  # Set to True if using HTTPS
+
+# CSRF Configuration - Use secure cookies in production (Railway uses HTTPS)
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False').lower() == 'true' or not DEBUG
 CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access CSRF token
 CSRF_COOKIE_SAMESITE = 'Lax'
 
