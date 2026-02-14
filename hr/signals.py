@@ -7,10 +7,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from hr.models import PayrollRun, Employee, LeaveType, LeaveBalance
+from audit.models import AuditLog
 
 logger = logging.getLogger(__name__)
 
-AUDIT_LOG_URL = "http://192.168.0.113:8000/api/audit/auditlogs/"
+# Removed hardcoded external audit URL
 
 # ----------------------------------------------------------------------
 # 🧾 AUTO POST TO FINANCE WHEN PAYROLL IS APPROVED (with Finance role enforcement)
@@ -49,7 +50,12 @@ def auto_post_to_finance(sender, instance, created, **kwargs):
                     "user": approved_by or "System",
                 }
                 try:
-                    requests.post(AUDIT_LOG_URL, json=audit_data, timeout=5)
+                    AuditLog.objects.create(
+                        module="Payroll",
+                        action_type="SECURITY_ALERT",
+                        description=audit_data["details"],
+                        performed_by=None # Approver failed role check
+                    )
                 except Exception as audit_error:
                     logger.error(f"⚠️ Failed to log unauthorized attempt for PayrollRun {instance.id}: {audit_error}")
                 return  # Stop here — not authorized
@@ -71,25 +77,25 @@ def auto_post_to_finance(sender, instance, created, **kwargs):
             }
 
             try:
-                response = requests.post(AUDIT_LOG_URL, json=audit_data, timeout=5)
-                if response.status_code in [200, 201]:
-                    logger.info(f"✅ Audit log created for PayrollRun {instance.id}")
-                else:
-                    logger.warning(f"⚠️ Audit log failed ({response.status_code}) for PayrollRun {instance.id}")
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"⚠️ Failed to send audit log for PayrollRun {instance.id}: {e}")
+                AuditLog.objects.create(
+                    module="Payroll",
+                    action_type="UPDATE",
+                    description=audit_data["details"],
+                    performed_by=None # Add logic for user if possible
+                )
+                logger.info(f"✅ Audit log created for PayrollRun {instance.id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to create audit log for PayrollRun {instance.id}: {e}")
 
     except Exception as e:
         logger.error(f"❌ Auto post to finance failed for PayrollRun {instance.id}: {e}")
         try:
-            error_audit_data = {
-                "action": "ERROR",
-                "module": "Payroll",
-                "details": f"Auto post to finance failed for PayrollRun {instance.id}: {str(e)}",
-                "timestamp": timezone.now().isoformat(),
-                "user": "System",
-            }
-            requests.post(AUDIT_LOG_URL, json=error_audit_data, timeout=5)
+            AuditLog.objects.create(
+                module="Payroll",
+                action_type="ERROR",
+                description=f"Auto post to finance failed for PayrollRun {instance.id}: {str(e)}",
+                performed_by=None
+            )
         except Exception as audit_error:
             logger.error(f"❌ Failed to log audit error for PayrollRun {instance.id}: {audit_error}")
 
@@ -148,13 +154,15 @@ def auto_create_payroll_for_new_employee(sender, instance, created, **kwargs):
         }
 
         try:
-            response = requests.post(AUDIT_LOG_URL, json=audit_payload, timeout=5)
-            if response.status_code in [200, 201]:
-                logger.info(f"✅ Audit log created for new payroll of {instance.get_full_name()}")
-            else:
-                logger.warning(f"⚠️ Audit log creation failed ({response.status_code}) for {instance.get_full_name()}")
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"⚠️ Failed to send audit log for {instance.get_full_name()}: {e}")
+            AuditLog.objects.create(
+                module="Payroll",
+                action_type="CREATE",
+                description=audit_payload["details"],
+                performed_by=None
+            )
+            logger.info(f"✅ Audit log created for new payroll of {instance.get_full_name()}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to create audit log for {instance.get_full_name()}: {e}")
 
     except Exception as e:
         logger.error(f"❌ Auto payroll creation failed for {instance.get_full_name()}: {e}")
@@ -201,7 +209,12 @@ def auto_create_leave_balances(sender, instance, created, **kwargs):
         }
         
         try:
-            requests.post(AUDIT_LOG_URL, json=audit_payload, timeout=5)
+            AuditLog.objects.create(
+                module="Leave",
+                action_type="CREATE",
+                description=audit_payload["details"],
+                performed_by=None
+            )
         except Exception:
             pass # Fail silently for audit
 
