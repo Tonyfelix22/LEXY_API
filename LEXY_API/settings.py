@@ -142,78 +142,56 @@ CORS_ALLOW_METHODS = [
 # CORS Configuration - Support both local development and Railway deployment
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:3001",# React local dev
+    "http://localhost:3001",  # React local dev
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
     "http://192.168.0.105:3000",
     "http://192.168.0.105:8000",
     "http://192.168.0.105:3001",
     "http://192.168.2.23:3000",
-    "https://lexy-api.vercel.app",  # Add your Vercel frontend
+    "https://lexy-api.vercel.app",  # Production Vercel
+    "https://lexy-api-git-main-tonyfelix22s-projects.vercel.app", # Vercel main branch
     "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",  # Current Vercel preview
+    "https://lexyapi-production.up.railway.app",  # Railway backend itself
 ]
 
-# Add frontend URL(s) from environment variable (Vercel, Railway, etc.)
-FRONTEND_URL = os.getenv('FRONTEND_URL')
-if FRONTEND_URL:
-    for url in FRONTEND_URL.split(','):
-        url = url.strip()
-        if not url:
-            continue
-        if url.startswith('http'):
-            CORS_ALLOWED_ORIGINS.append(url)
-        else:
-            CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
+CORS_ALLOW_CREDENTIALS = True
 
-# Allow Vercel preview and production deployments (*.vercel.app)
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+# Allow Vercel preview deployments (*.vercel.app)
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://[a-z0-9-]+\.vercel\.app$",
-    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",  # preview deployments
+    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
 ]
 
-# Allow all Railway domains in production (more permissive, adjust for security)
-# Railway domains end with .railway.app
-# Detect Railway environment using multiple indicators
-is_railway = (
-    os.getenv('RAILWAY_ENVIRONMENT') or 
-    os.getenv('RAILWAY_ENVIRONMENT') == 'production' or
-    os.getenv('RAILWAY_PUBLIC_DOMAIN') or  # Railway sets this
-    os.getenv('RAILWAY_SERVICE_NAME') or  # Railway sets this
-    'railway.app' in os.getenv('RAILWAY_PUBLIC_DOMAIN', '')  # Check domain
-)
-
-# Additional fallback: if domain contains railway.app, enable CORS
-current_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
-if 'railway.app' in current_domain or is_railway:
-    CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in Railway environment
-    CORS_ALLOW_CREDENTIALS = False  # Disable credentials for security when allowing all origins
-    CORS_ALLOW_ALL_HEADERS = True  # Allow all headers
-    CORS_ALLOW_METHODS = [
-        "GET",
-        "POST", 
-        "PUT",
-        "PATCH",
-        "DELETE",
-        "OPTIONS",
-        "HEAD",
-    ]
-    # Force CORS headers for all responses
-    CORS_EXPOSE_HEADERS = [
-        "Content-Type",
-        "X-CSRFToken",
-        "Authorization",
-    ]
-else:
-    CORS_ALLOW_ALL_ORIGINS = False  # Keep explicit list for local development
-
+# CSRF Configuration
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "http://192.168.0.113:3000",
-    "http://192.168.0.113:3001",
-    "http://192.168.2.23:3000",
-    "https://lexy-api.vercel.app",  # Add your Vercel frontend
-    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",  # Current Vercel preview
+    "https://lexy-api.vercel.app",
+    "https://lexyapi-production.up.railway.app",
 ]
 
 # Add Railway frontend URL to CSRF trusted origins
