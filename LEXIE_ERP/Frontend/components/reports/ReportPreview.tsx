@@ -1,5 +1,5 @@
 import React from 'react';
-import { generateReport } from '@/utils/api';
+import { generateReport, BACKEND_ROOT } from '@/utils/api';
 
 interface ReportPreviewProps {
     data: any;
@@ -14,7 +14,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, reportName, 
             if (response.file_url) {
                 // Trigger download
                 const link = document.createElement('a');
-                link.href = response.file_url.startsWith('http') ? response.file_url : `http://127.0.0.1:8000${response.file_url}`;
+                link.href = response.file_url.startsWith('http') ? response.file_url : `${BACKEND_ROOT}${response.file_url}`;
                 link.download = `${reportName}.${format.toLowerCase()}`;
                 document.body.appendChild(link);
                 link.click();

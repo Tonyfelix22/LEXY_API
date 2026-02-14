@@ -1,10 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useAuth } from "@/context/auth-context"
-import ModernHRDashboard from "@/components/dashboard/hr/modern-dashboard"
 import { LayoutGrid, List, Users, CheckCircle, Calendar, ArrowRight, CreditCard, Briefcase } from "lucide-react"
 import { apiFetch } from "@/utils/api"
+
+const ModernHRDashboard = dynamic(
+    () => import("@/components/dashboard/hr/modern-dashboard"),
+    { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-lg bg-slate-800" /> }
+)
 
 interface DashboardStats {
     totalEmployees: number

@@ -1,12 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { useAuth } from "@/context/auth-context"
 import { apiFetch } from "@/utils/api"
 import toast from "react-hot-toast"
 import { Banknote, BookOpen, FileText, Wallet } from "lucide-react"
-import { FinancialChart } from "@/components/dashboard/financial-chart"
 import BudgetTable from "@/components/finance/budget-table"
+
+const FinancialChart = dynamic(
+    () => import("@/components/dashboard/financial-chart").then((m) => m.FinancialChart),
+    { ssr: false, loading: () => <div className="h-[300px] animate-pulse rounded-xl bg-muted/50" /> }
+)
 
 interface DashboardStats {
     totalAccounts: number
@@ -28,7 +33,6 @@ export default function FinanceDashboard() {
     }, [token])
 
     const fetchDashboardStats = async () => {
-        console.log("Fetching finance dashboard stats...")
         setLoading(true)
         setError(null)
 
@@ -48,18 +52,7 @@ export default function FinanceDashboard() {
             // Since the user said "dont remove the componets", I will try to preserve the existing cards.
             // I'll fetch the chart data specifically.
 
-            const apiUrl = process.env.NEXT_PUBLIC_BASE_API || "http://127.0.0.1:8000/api"
-            const res = await fetch(`${apiUrl}/dashboard/stats/`, {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            })
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch stats")
-            }
-
-            const dashboardData = await res.json()
+            const dashboardData = await apiFetch("/dashboard/stats/")
 
             setStats({
                 totalAccounts: dashboardData.total_accounts || 0,

@@ -1,7 +1,11 @@
 import { getAuthToken } from "@/utils/token";
 
-const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_API || "http://127.0.0.1:8000/api";
+/** API base URL (e.g. https://your-api.railway.app/api). Set NEXT_PUBLIC_BASE_API in Vercel for production. */
+export const BASE_URL =
+    process.env.NEXT_PUBLIC_BASE_API || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+
+/** Backend root for media/file URLs (same host as API, without /api). */
+export const BACKEND_ROOT = BASE_URL.replace(/\/api\/?$/, "") || "http://127.0.0.1:8000";
 
 export async function apiFetch(
     endpoint: string,

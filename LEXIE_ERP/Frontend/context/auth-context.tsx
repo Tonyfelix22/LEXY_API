@@ -30,25 +30,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isDev = typeof process !== "undefined" && process.env.NODE_ENV === "development";
+const devLog = (...args: unknown[]) => { if (isDev) console.log(...args); };
+const devWarn = (...args: unknown[]) => { if (isDev) console.warn(...args); };
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isMounted, setIsMounted] = useState(false);
 
-    // Build and validate API base URL
-    const RAW_BASE_API = process.env.NEXT_PUBLIC_BASE_API || "http://127.0.0.1:8000/api"
+    const RAW_BASE_API = process.env.NEXT_PUBLIC_BASE_API || "http://127.0.0.1:8000/api";
 
     const buildUrl = (base: string, path: string) => {
-        const b = base.replace(/\/?$/, "") // remove trailing slash
-        const p = path.startsWith("/") ? path : `/${path}`
-        return `${b}${p}`
-    }
+        const b = base.replace(/\/?$/, "");
+        const p = path.startsWith("/") ? path : `/${path}`;
+        return `${b}${p}`;
+    };
 
-    const BASE_API = RAW_BASE_API
-    if (typeof window !== "undefined") {
-        console.log("API base:", BASE_API)
-    }
+    const BASE_API = RAW_BASE_API;
+    if (typeof window !== "undefined") devLog("API base:", BASE_API);
 
     const safeJson = async (res: Response) => {
         try {
@@ -64,9 +64,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const fetchUser = async (authToken: string): Promise<User | null> => {
-        // Use /users/user/ endpoint which returns correct format (id, username, email, role, groups)
-        const endpoint = buildUrl(BASE_API, "/users/user/")
-        console.log("📡 Fetching user from:", endpoint)
+        const endpoint = buildUrl(BASE_API, "/users/user/");
+        devLog("📡 Fetching user from:", endpoint);
 
         const tryFetch = async (scheme: "Bearer" | "Token") => {
             const res = await fetch(endpoint, {
@@ -80,10 +79,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         try {
             // Try Token first (DRF TokenAuth - what /api/users/login/ returns)
-            let res = await tryFetch("Token")
+            let res = await tryFetch("Token");
             if (res.status === 401) {
-                console.warn("⚠️ 401 with 'Token' scheme, retrying with 'Bearer' (JWT)...")
-                res = await tryFetch("Bearer")
+                devWarn("⚠️ 401 with 'Token' scheme, retrying with 'Bearer' (JWT)...");
+                res = await tryFetch("Bearer");
             }
 
             if (!res.ok) {
@@ -92,9 +91,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return null
             }
 
-            const data: User = await res.json()
-            console.log("✅ User fetched successfully:", data.username)
-            setUser(data)
+            const data: User = await res.json();
+            devLog("✅ User fetched successfully:", data.username);
+            setUser(data);
             return data
         } catch (error: any) {
             console.error("❌ Network error fetching user:", error?.message || error)
@@ -104,46 +103,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (!isMounted) return;
-
+        let cancelled = false;
         const initAuth = async () => {
             try {
                 const savedToken = getAuthToken();
                 if (savedToken) {
-                    console.log("🔹 Found saved token, attempting to restore session...");
+                    devLog("🔹 Restoring session...");
                     setToken(savedToken);
-                    const user = await fetchUser(savedToken);
-
-                    if (!user) {
-                        console.log("⚠️ Failed to restore session - token may be expired");
-                    } else {
-                        console.log("✅ Session restored successfully");
-                    }
+                    const fetchedUser = await fetchUser(savedToken);
+                    if (cancelled) return;
+                    if (!fetchedUser) devLog("⚠️ Session restore failed (token may be expired)");
+                    else devLog("✅ Session restored");
                 } else {
-                    console.log("ℹ️ No saved token found");
+                    devLog("ℹ️ No saved token");
                 }
             } catch (error) {
-                console.error("❌ Error during auth initialization:", error);
-                clearAuthToken();
-                setToken(null);
-                setUser(null);
+                if (!cancelled) console.error("❌ Auth init error:", error);
+                if (!cancelled) {
+                    clearAuthToken();
+                    setToken(null);
+                    setUser(null);
+                }
             } finally {
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
-
         initAuth();
-    }, [isMounted]);
+        return () => { cancelled = true; };
+    }, []);
 
     const login = async (username: string, password: string): Promise<User> => {
         setIsLoading(true);
         try {
-            const endpoint = buildUrl(BASE_API, "/users/login/")
-            console.log("🔑 Attempting login for:", username, "→", endpoint)
+            const endpoint = buildUrl(BASE_API, "/users/login/");
+            devLog("🔑 Login attempt:", username, "→", endpoint);
 
             let res: Response
             try {
@@ -171,8 +164,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 throw new Error("Token missing in login response (expected 'token' or 'access').")
             }
 
-            console.log("✅ Login successful, saving token...")
-            saveAuthToken(issuedToken)
+            devLog("✅ Login successful");
+            saveAuthToken(issuedToken);
             setToken(issuedToken)
 
             const fetchedUser = await fetchUser(issuedToken)
@@ -198,7 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const loginWithToken = async (incomingToken: string): Promise<User> => {
         setIsLoading(true);
         try {
-            console.log("🔑 Logging in with provided token...");
+            devLog("🔑 Logging in with token...");
             saveAuthToken(incomingToken);
             setToken(incomingToken);
 
@@ -221,13 +214,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = async () => {
         if (!token) {
-            console.log("ℹ️ No token to logout");
+            devLog("ℹ️ No token to logout");
             return;
         }
 
         try {
             const endpoint = `${BASE_API}/users/logout/`;
-            console.log("🚪 Logging out...");
+            devLog("🚪 Logging out...");
 
             await fetch(endpoint, {
                 method: "POST",
@@ -235,12 +228,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     Authorization: `Token ${token}`,  // Use Token for DRF TokenAuth
                     "Content-Type": "application/json",
                 },
-            }).catch(() => console.log("⚠️ Logout API call failed, clearing local state anyway"));
+            }).catch(() => devLog("⚠️ Logout API failed, clearing state"));
         } finally {
             clearAuthToken();
             setToken(null);
             setUser(null);
-            console.log("✅ Logged out successfully");
+            devLog("✅ Logged out");
         }
     };
 
@@ -266,10 +259,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Convenience flag: super admin can manage anything on the frontend
     const canManageAll = !!isSuperAdmin
-
-    if (!isMounted) {
-        return null;
-    }
 
     return (
         <AuthContext.Provider

@@ -54,9 +54,9 @@ src/
    npm install
    \`\`\`
 
-2. **Configure environment variables** in `.env.local`:
+2. **Configure environment variables** in `.env.local` (see `.env.example`):
    \`\`\`
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+   NEXT_PUBLIC_BASE_API=http://127.0.0.1:8000/api
    \`\`\`
 
 3. **Run the development server**:
@@ -66,6 +66,17 @@ src/
 
 4. **Open in browser**:
    Navigate to `http://localhost:3000`
+
+## Deploying to Vercel (production)
+
+1. **Set the production API URL** in your Vercel project:
+   - **Settings → Environment Variables**
+   - Add: `NEXT_PUBLIC_BASE_API` = `https://your-backend-api-url/api` (e.g. `https://lexyapi-production.up.railway.app/api` if your backend is on Railway).
+   - Redeploy after adding the variable (Next.js bakes `NEXT_PUBLIC_*` at build time).
+
+2. **Backend CORS**: Your backend must allow the frontend origin. The LEXIE backend already allows `*.vercel.app`. If you use a custom domain for the frontend, set `FRONTEND_URL` on the backend (e.g. `https://your-app.vercel.app` or comma-separated list).
+
+Without `NEXT_PUBLIC_BASE_API` in Vercel, the app will try to call `http://127.0.0.1:8000/api` and fail with CORS/network errors in production.
 
 ## Authentication
 
