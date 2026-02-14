@@ -7,8 +7,10 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 
-# Add to INSTALLED_APPS
+# Frontend URL configuration - define early to avoid NameError
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
+
+# Add to INSTALLED_APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
