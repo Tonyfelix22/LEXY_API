@@ -26,6 +26,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from . import frontend_views
+from .views import health_check
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -45,6 +46,6 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     
     # Root path - simple health check
-    path('', lambda request: HttpResponse("LEXY API Backend - Running", content_type="text/plain")),
+    path('', health_check),
 ]
 
