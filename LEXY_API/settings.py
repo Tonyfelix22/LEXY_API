@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 
 # Add to INSTALLED_APPS
+FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -140,7 +141,6 @@ CORS_ALLOW_METHODS = [
 
 
 # Consolidate Frontend URL detection
-FRONTEND_URL = os.getenv('FRONTEND_URL')
 
 # CORS Configuration - Support both local development and Railway deployment
 CORS_ALLOWED_ORIGINS = [
