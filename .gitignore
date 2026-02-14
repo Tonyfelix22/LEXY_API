@@ -1,1 +1,8 @@
 .env
+node_modules/
+.next/
+out/
+*.pyc
+__pycache__/
+*.log
+.DS_Store
