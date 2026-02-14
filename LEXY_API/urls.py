@@ -17,11 +17,15 @@ Including another URLconf
 
 # ============================================
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+
+from . import frontend_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('API.urls')),
+    # Serve frontend at root - catch-all for Next.js static export
+    re_path(r'^(?P<path>.*)$', frontend_views.serve_frontend),
 ]
 
 

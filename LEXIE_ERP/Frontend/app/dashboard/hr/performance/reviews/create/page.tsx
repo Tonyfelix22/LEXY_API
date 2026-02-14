@@ -18,6 +18,8 @@ export default function CreateReviewPage() {
     const [loading, setLoading] = useState(false);
     const [employees, setEmployees] = useState<{ id: number, first_name: string, last_name: string }[]>([]);
 
+    const [managers, setManagers] = useState<{ id: number, first_name: string, last_name: string }[]>([]);
+
     const [formData, setFormData] = useState({
         employee: "",
         reviewer: "",
@@ -27,15 +29,19 @@ export default function CreateReviewPage() {
     });
 
     useEffect(() => {
-        const fetchEmps = async () => {
+        const fetchData = async () => {
             try {
-                const data = await apiFetch("/hr/employees/");
-                setEmployees(data.results || data);
+                const [empsData, mgrsData] = await Promise.all([
+                    apiFetch("/hr/employees/all_employees/"),
+                    apiFetch("/hr/employees/managers/")
+                ]);
+                setEmployees(empsData);
+                setManagers(mgrsData);
             } catch (error) {
-                console.error("Failed to load employees");
+                console.error("Failed to load data");
             }
         };
-        fetchEmps();
+        fetchData();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -102,7 +108,7 @@ export default function CreateReviewPage() {
                                         <SelectValue placeholder="Select Reviewer" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {employees.map((e) => (
+                                        {managers.map((e) => (
                                             <SelectItem key={e.id} value={String(e.id)}>{e.first_name} {e.last_name}</SelectItem>
                                         ))}
                                     </SelectContent>

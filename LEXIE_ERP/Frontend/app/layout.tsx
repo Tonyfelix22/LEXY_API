@@ -1,27 +1,25 @@
 // app/layout.tsx
 import type React from "react";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google"; // ✅ Load Inter from Google Fonts
 import "./globals.css";
-import ClientLayout from "@/components/layout/client-layout"; // ✅ our new client wrapper
+import ClientLayout from "@/components/layout/client-layout";
 
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-    title: "LEXIE",
-    description: "Enterprise Resource Planner",
+  title: "LEXIE",
+  description: "Enterprise Resource Planner",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <html lang="en" suppressHydrationWarning>
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} font-sans bg-background text-foreground`}
-        >
-        {/* ✅ Move client logic into ClientLayout */}
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} font-sans bg-background text-foreground`}
+      >
         <ClientLayout>{children}</ClientLayout>
-        </body>
-        </html>
-    );
+      </body>
+    </html>
+  );
 }
