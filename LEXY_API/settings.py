@@ -169,7 +169,33 @@ if FRONTEND_URL:
                 CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
 
 CORS_ALLOW_CREDENTIALS = True
-...
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+# Allow Vercel preview deployments (*.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[a-z0-9-]+\.vercel\.app$",
+    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
+]
 # CSRF Configuration
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
