@@ -1,7 +1,8 @@
 import ReviewDetailsClient from "@/components/hr/ReviewDetailsClient";
 
-// Static export: always return one path so build succeeds without API. Client fetches by id at runtime.
-export function generateStaticParams() {
+export const dynamicParams = false;
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
     return [{ id: "_" }];
 }
 
