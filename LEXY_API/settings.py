@@ -1,23 +1,17 @@
 # Add to your myproject/settings.py:
+import os
+# Must define before any use (line 288); deploy may use older copy without later definitions
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
 
 from pathlib import Path
-import os
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 
 # Frontend URL configuration - define early to avoid NameError
-# This MUST be defined before any usage in CORS configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
-
-# Environment detection - define early so they are always available (avoid NameError in containers)
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-IS_DOCKER = (
-    os.path.exists('/.dockerenv') or
-    os.path.exists('/run/.containerenv') or
-    os.getenv('DOCKER_CONTAINER', '').lower() in ('true', '1', 'yes')
-)
 
 # Add to INSTALLED_APPS
 INSTALLED_APPS = [
@@ -290,17 +284,10 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # ==============================================================================
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
-# Define here so this block works even if top-of-file definitions are missing (e.g. in deployed copy)
-_IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-_IS_DOCKER = (
-    os.path.exists('/.dockerenv') or
-    os.path.exists('/run/.containerenv') or
-    str(os.getenv('DOCKER_CONTAINER', '')).lower() in ('true', '1', 'yes')
-)
-
-if _IS_RAILWAY:
+# IS_RAILWAY / IS_DOCKER defined at top of file (lines 3-4)
+if IS_RAILWAY:
     print("--- RAILWAY DEPLOYMENT DETECTED ---")
-elif _IS_DOCKER:
+elif IS_DOCKER:
     print("\n" + "!"*60)
     print("!!! LOCAL DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
     print("!"*60 + "\n")
