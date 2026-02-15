@@ -10,7 +10,7 @@ import time
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 def run_migrations():
     """Run Django migrations, but don't crash if DB is not ready."""

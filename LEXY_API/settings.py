@@ -53,6 +53,9 @@ DATABASES = {
     }
 }
 
+# Debugging: Print connection info (except password)
+print(f"--- Connection Info: Host={DATABASES['default'].get('HOST')}, DataBase={DATABASES['default'].get('NAME')}, User={DATABASES['default'].get('USER')} ---")
+
 # If DATABASE_URL is provided (Railway sometimes uses this), parse it
 database_url = os.getenv('DATABASE_URL')
 if database_url:
