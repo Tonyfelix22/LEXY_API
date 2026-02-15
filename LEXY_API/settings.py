@@ -53,6 +53,15 @@ DATABASES = {
     }
 }
 
+# Hardened fallback for Docker on Windows
+if os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv'):
+    print("--- DOCKER DETECTED ---")
+    if DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', None]:
+        print(f"--- Overriding DB_HOST: {DATABASES['default'].get('HOST')} -> host.docker.internal ---")
+        DATABASES['default']['HOST'] = 'host.docker.internal'
+        # Force PGHOST for psycopg2
+        os.environ['PGHOST'] = 'host.docker.internal'
+
 # Debugging: Print connection info (except password)
 print(f"--- Connection Info: Host={DATABASES['default'].get('HOST')}, DataBase={DATABASES['default'].get('NAME')}, User={DATABASES['default'].get('USER')} ---")
 
