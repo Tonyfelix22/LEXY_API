@@ -1,4 +1,4 @@
-# .env removed to allow committing DB config
+.env
 node_modules/
 .next/
 out/
