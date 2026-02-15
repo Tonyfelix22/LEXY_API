@@ -96,11 +96,19 @@ if database_url:
         'PORT': result.port or os.getenv('PGPORT', '5432'),
     }
 
-# Override host for Docker if needed
+# Override host for Docker or Railway rescue
 if IS_DOCKER and not IS_RAILWAY:
     current_host = DATABASES['default']['HOST']
     if current_host in ['localhost', '127.0.0.1', '::1']:
         DATABASES['default']['HOST'] = 'host.docker.internal'
+
+# Railway Rescue: If on Railway and host is 'localhost', try to use internal PGHOST
+if IS_RAILWAY and DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', None]:
+    pghost = os.getenv('PGHOST')
+    if pghost and pghost not in ['localhost', '127.0.0.1']:
+        DATABASES['default']['HOST'] = pghost
+        # Also update os.environ so other tools (manage.py) see it
+        os.environ['PGHOST'] = pghost
 
 # CORS configuration
 CORS_ALLOWED_ORIGINS = [
