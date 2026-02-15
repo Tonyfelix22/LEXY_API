@@ -290,30 +290,23 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # ==============================================================================
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
+# Define here so this block works even if top-of-file definitions are missing (e.g. in deployed copy)
+_IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+_IS_DOCKER = (
+    os.path.exists('/.dockerenv') or
+    os.path.exists('/run/.containerenv') or
+    str(os.getenv('DOCKER_CONTAINER', '')).lower() in ('true', '1', 'yes')
+)
 
-# Ensure IS_RAILWAY/IS_DOCKER exist (defensive: in case top-of-file def was lost in merge)
-if 'IS_RAILWAY' not in dir():
-    IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-if 'IS_DOCKER' not in dir():
-    IS_DOCKER = (
-        os.path.exists('/.dockerenv') or
-        os.path.exists('/run/.containerenv') or
-        str(os.getenv('DOCKER_CONTAINER', '')).lower() in ('true', '1', 'yes')
-    )
-
-if IS_RAILWAY:
+if _IS_RAILWAY:
     print("--- RAILWAY DEPLOYMENT DETECTED ---")
-    # On Railway, the database host is provided by the environment (PGHOST, etc.)
-elif IS_DOCKER:
+elif _IS_DOCKER:
     print("\n" + "!"*60)
     print("!!! LOCAL DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
     print("!"*60 + "\n")
-    
-    # Only override if the current host is likely a local default
     current_host = DATABASES['default'].get('HOST')
     if current_host in ['localhost', '127.0.0.1', '::1', None]:
         print(f"DEBUG: Overriding local DB_HOST '{current_host}' -> 'host.docker.internal'")
         DATABASES['default']['HOST'] = 'host.docker.internal'
         os.environ['PGHOST'] = 'host.docker.internal'
-    
     print(f"DEBUG: Final Host set to: {DATABASES['default']['HOST']}")
