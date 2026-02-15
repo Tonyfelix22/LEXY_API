@@ -227,8 +227,29 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Debug output
+# Debug & Environment Output
 print("\n" + "="*60)
-print(f"LEXIE CONFIG: Railway={IS_RAILWAY} | Docker={IS_DOCKER}")
-print(f"DATABASE HOST: {DATABASES['default']['HOST']}")
+print("LEXIE ERP - ENVIRONMENT DIAGNOSTICS")
+print("="*60)
+print(f"IS_RAILWAY: {IS_RAILWAY}")
+print(f"IS_DOCKER:  {IS_DOCKER}")
+
+if IS_RAILWAY:
+    print("\nRAILWAY ENVIRONMENT VARIABLES:")
+    print(f"  PGHOST:     {os.getenv('PGHOST')}")
+    print(f"  PGPORT:     {os.getenv('PGPORT')}")
+    print(f"  PGDATABASE: {os.getenv('PGDATABASE')}")
+    print(f"  PGUSER:     {os.getenv('PGUSER')}")
+    print(f"  HAS_URL:    {'Yes' if os.getenv('DATABASE_URL') else 'No'}")
+
+print("\nFINAL DJANGO DATABASE CONFIG:")
+print(f"  HOST:       {DATABASES['default'].get('HOST')}")
+print(f"  PORT:       {DATABASES['default'].get('PORT')}")
+print(f"  NAME:       {DATABASES['default'].get('NAME')}")
+print(f"  USER:       {DATABASES['default'].get('USER')}")
+
+if IS_RAILWAY and DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1']:
+    print("\nWARNING: App is on Railway but still pointing to localhost!")
+    print("Railway variables might be missing or wrongly parsed.")
+
 print("="*60 + "\n")
