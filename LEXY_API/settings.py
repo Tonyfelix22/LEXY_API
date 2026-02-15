@@ -71,15 +71,15 @@ TEMPLATES = [
     },
 ]
 
-# Database configuration
+# Database configuration - Matching your Railway Service Variables
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
-        'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv('DB_NAME') or os.getenv('PGDATABASE', 'LEXYDB'),
+        'USER': os.getenv('DB_USER') or os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD') or os.getenv('PGPASSWORD', 'Password26'),
+        'HOST': os.getenv('DB_HOST') or os.getenv('PGHOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT') or os.getenv('PGPORT', '5432'),
     }
 }
 
@@ -227,7 +227,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Debug & Environment Output
+# Debug & Environment Output - Aligned with your Railway Dashboard
 print("\n" + "="*60)
 print("LEXIE ERP - ENVIRONMENT DIAGNOSTICS")
 print("="*60)
@@ -235,21 +235,26 @@ print(f"IS_RAILWAY: {IS_RAILWAY}")
 print(f"IS_DOCKER:  {IS_DOCKER}")
 
 if IS_RAILWAY:
-    print("\nRAILWAY ENVIRONMENT VARIABLES:")
-    print(f"  PGHOST:     {os.getenv('PGHOST')}")
-    print(f"  PGPORT:     {os.getenv('PGPORT')}")
-    print(f"  PGDATABASE: {os.getenv('PGDATABASE')}")
-    print(f"  PGUSER:     {os.getenv('PGUSER')}")
-    print(f"  HAS_URL:    {'Yes' if os.getenv('DATABASE_URL') else 'No'}")
+    print("\nRAILWAY SERVICE VARIABLES (From Dashboard):")
+    print(f"  DB_HOST:     {os.getenv('DB_HOST')}")
+    print(f"  DB_NAME:     {os.getenv('DB_NAME')}")
+    print(f"  DB_USER:     {os.getenv('DB_USER')}")
+    print(f"  DB_PORT:     {os.getenv('DB_PORT')}")
+    print("\nRAILWAY PLUGIN VARIABLES (Standard):")
+    print(f"  PGHOST:      {os.getenv('PGHOST')}")
+    print(f"  PGDATABASE:  {os.getenv('PGDATABASE')}")
 
 print("\nFINAL DJANGO DATABASE CONFIG:")
-print(f"  HOST:       {DATABASES['default'].get('HOST')}")
-print(f"  PORT:       {DATABASES['default'].get('PORT')}")
-print(f"  NAME:       {DATABASES['default'].get('NAME')}")
-print(f"  USER:       {DATABASES['default'].get('USER')}")
+print(f"  HOST:        {DATABASES['default'].get('HOST')}")
+print(f"  PORT:        {DATABASES['default'].get('PORT')}")
+print(f"  NAME:        {DATABASES['default'].get('NAME')}")
+print(f"  USER:        {DATABASES['default'].get('USER')}")
 
 if IS_RAILWAY and DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1']:
-    print("\nWARNING: App is on Railway but still pointing to localhost!")
-    print("Railway variables might be missing or wrongly parsed.")
+    print("\n" + "!"*60)
+    print("CRITICAL WARNING: App is on Railway but pointing to 'localhost'!")
+    print("This will definitely fail unless your DB is in the same container.")
+    print("Please update DB_HOST in Railway to your database hostname.")
+    print("!"*60)
 
 print("="*60 + "\n")
