@@ -48,7 +48,7 @@ DATABASES = {
         'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
         'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'host.docker.internal'),
         'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
     }
 }
@@ -278,3 +278,28 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# ==============================================================================
+# FINAL CONFIGURATION OVERRIDES
+# ==============================================================================
+
+# Detection logic for different environments
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true'
+
+if IS_RAILWAY:
+    print("--- RAILWAY DEPLOYMENT DETECTED ---")
+    # On Railway, the database host is provided by the environment (PGHOST, etc.)
+elif IS_DOCKER:
+    print("\n" + "!"*60)
+    print("!!! LOCAL DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
+    print("!"*60 + "\n")
+    
+    # Only override if the current host is likely a local default
+    current_host = DATABASES['default'].get('HOST')
+    if current_host in ['localhost', '127.0.0.1', '::1', None]:
+        print(f"DEBUG: Overriding local DB_HOST '{current_host}' -> 'host.docker.internal'")
+        DATABASES['default']['HOST'] = 'host.docker.internal'
+        os.environ['PGHOST'] = 'host.docker.internal'
+    
+    print(f"DEBUG: Final Host set to: {DATABASES['default']['HOST']}")

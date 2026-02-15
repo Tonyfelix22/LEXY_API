@@ -253,8 +253,17 @@ def login_user(request):
         return Response({"message": "This account is inactive. Contact admin."},
                         status=status.HTTP_403_FORBIDDEN)
 
-    token, _ = Token.objects.get_or_create(user=user)
-    profile = get_or_create_user_profile(user)
+    try:
+        token, _ = Token.objects.get_or_create(user=user)
+        profile = get_or_create_user_profile(user)
+    except Exception:
+        return Response(
+            {
+                "success": False,
+                "message": "Login failed due to a server configuration/database error. Try again in a moment.",
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
 
     return Response({
         "success": True,
