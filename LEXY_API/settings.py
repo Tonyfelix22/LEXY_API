@@ -53,18 +53,6 @@ DATABASES = {
     }
 }
 
-# Hardened fallback for Docker on Windows
-if os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv'):
-    print("--- DOCKER DETECTED ---")
-    if DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', None]:
-        print(f"--- Overriding DB_HOST: {DATABASES['default'].get('HOST')} -> host.docker.internal ---")
-        DATABASES['default']['HOST'] = 'host.docker.internal'
-        # Force PGHOST for psycopg2
-        os.environ['PGHOST'] = 'host.docker.internal'
-
-# Debugging: Print connection info (except password)
-print(f"--- Connection Info: Host={DATABASES['default'].get('HOST')}, DataBase={DATABASES['default'].get('NAME')}, User={DATABASES['default'].get('USER')} ---")
-
 # If DATABASE_URL is provided (Railway sometimes uses this), parse it
 database_url = os.getenv('DATABASE_URL')
 if database_url:
@@ -290,3 +278,24 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# ==============================================================================
+# FINAL CONFIGURATION OVERRIDES
+# ==============================================================================
+
+# Force Docker host on Windows/Mac
+# We check multiple indicators of being in a container
+IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true'
+
+if IS_DOCKER:
+    print("\n" + "="*50)
+    print("DOCKER ENVIRONMENT DETECTED")
+    current_host = DATABASES['default'].get('HOST')
+    if current_host in ['localhost', '127.0.0.1', '::1', None]:
+        print(f"CRITICAL: Overriding DB_HOST '{current_host}' with 'host.docker.internal'")
+        DATABASES['default']['HOST'] = 'host.docker.internal'
+        # Explicitly set for psycopg2 directly
+        os.environ['PGHOST'] = 'host.docker.internal'
+    
+    print(f"FINAL CONNECTION CONFIG: Host={DATABASES['default'].get('HOST')}, DB={DATABASES['default'].get('NAME')}, User={DATABASES['default'].get('USER')}")
+    print("="*50 + "\n")
