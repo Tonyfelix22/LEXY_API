@@ -11,6 +11,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 # This MUST be defined before any usage in CORS configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 
+# Environment detection - define early so they are always available (avoid NameError in containers)
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+IS_DOCKER = (
+    os.path.exists('/.dockerenv') or
+    os.path.exists('/run/.containerenv') or
+    os.getenv('DOCKER_CONTAINER', '').lower() in ('true', '1', 'yes')
+)
+
 # Add to INSTALLED_APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -283,9 +291,15 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
 
-# Detection logic for different environments
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true'
+# Ensure IS_RAILWAY/IS_DOCKER exist (defensive: in case top-of-file def was lost in merge)
+if 'IS_RAILWAY' not in dir():
+    IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+if 'IS_DOCKER' not in dir():
+    IS_DOCKER = (
+        os.path.exists('/.dockerenv') or
+        os.path.exists('/run/.containerenv') or
+        str(os.getenv('DOCKER_CONTAINER', '')).lower() in ('true', '1', 'yes')
+    )
 
 if IS_RAILWAY:
     print("--- RAILWAY DEPLOYMENT DETECTED ---")
