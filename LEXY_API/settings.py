@@ -48,7 +48,7 @@ DATABASES = {
         'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
         'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'host.docker.internal'),
         'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
     }
 }
@@ -285,10 +285,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 # Use host.docker.internal if we are in Docker and the host is still localhost
 # This is a fail-safe for local development in Docker on Windows/Mac
-if os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true':
-    if DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', '::1', None]:
-        DATABASES['default']['HOST'] = os.getenv('DB_HOST', 'host.docker.internal')
-        os.environ['PGHOST'] = DATABASES['default']['HOST']
+if IS_DOCKER:
+    print("\n" + "!"*60)
+    print("!!! DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
+    print("!"*60 + "\n")
+    DATABASES['default']['HOST'] = 'host.docker.internal'
+    os.environ['PGHOST'] = 'host.docker.internal'
     
-    # Simple, clean log for confirmation
-    print(f"--- Container DB Host: {DATABASES['default']['HOST']} ---")
+    # Final verification print
+    print(f"DEBUG: Final Host set to: {DATABASES['default']['HOST']}")
