@@ -284,16 +284,25 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # ==============================================================================
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
-# IS_RAILWAY / IS_DOCKER defined at top of file (lines 3-4)
-if IS_RAILWAY:
-    print("--- RAILWAY DEPLOYMENT DETECTED ---")
-elif IS_DOCKER:
-    print("\n" + "!"*60)
-    print("!!! LOCAL DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
-    print("!"*60 + "\n")
+# Self-contained logic to avoid NameErrors if definitions at top fail
+_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes')
+
+print("\n" + "="*60)
+print(f"--- LEXIE CONFIG LOADED ---")
+print(f"RAILWAY: {_RAILWAY} | DOCKER: {_DOCKER}")
+print("="*60 + "\n")
+
+if _RAILWAY:
+    print(">>> RAILWAY MODE ACTIVE - Using environment-provided host")
+elif _DOCKER:
     current_host = DATABASES['default'].get('HOST')
     if current_host in ['localhost', '127.0.0.1', '::1', None]:
-        print(f"DEBUG: Overriding local DB_HOST '{current_host}' -> 'host.docker.internal'")
+        print(f">>> LOCAL DOCKER DETECTED - FORCING host.docker.internal (Was: {current_host})")
         DATABASES['default']['HOST'] = 'host.docker.internal'
         os.environ['PGHOST'] = 'host.docker.internal'
-    print(f"DEBUG: Final Host set to: {DATABASES['default']['HOST']}")
+    else:
+        print(f">>> LOCAL DOCKER DETECTED - Using existing host: {current_host}")
+
+print(f"FINAL DATABASE HOST: {DATABASES['default'].get('HOST')}")
+print("="*60 + "\n")
