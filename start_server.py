@@ -14,12 +14,7 @@ load_dotenv(override=True)
 
 def run_migrations():
     """Run Django migrations, but don't crash if DB is not ready."""
-    print("--- Environment Check ---")
-    print(f"Current Directory: {os.getcwd()}")
-    print(f".env exists: {os.path.exists('.env')}")
-    print(f"DB_HOST from env: {os.getenv('DB_HOST')}")
-    print(f"PGHOST from env: {os.getenv('PGHOST')}")
-    print("------------------------")
+    print(f"Checking database connection (Host: {os.getenv('DB_HOST', 'localhost')})...")
     print("Running database migrations...")
     max_attempts = int(os.getenv('MIGRATE_MAX_ATTEMPTS', '12'))
     delay_seconds = float(os.getenv('MIGRATE_RETRY_DELAY_SECONDS', '5'))

@@ -283,19 +283,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
 
-# Force Docker host on Windows/Mac
-# We check multiple indicators of being in a container
-IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true'
-
-if IS_DOCKER:
-    print("\n" + "="*50)
-    print("DOCKER ENVIRONMENT DETECTED")
-    current_host = DATABASES['default'].get('HOST')
-    if current_host in ['localhost', '127.0.0.1', '::1', None]:
-        print(f"CRITICAL: Overriding DB_HOST '{current_host}' with 'host.docker.internal'")
-        DATABASES['default']['HOST'] = 'host.docker.internal'
-        # Explicitly set for psycopg2 directly
-        os.environ['PGHOST'] = 'host.docker.internal'
+# Use host.docker.internal if we are in Docker and the host is still localhost
+# This is a fail-safe for local development in Docker on Windows/Mac
+if os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true':
+    if DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', '::1', None]:
+        DATABASES['default']['HOST'] = os.getenv('DB_HOST', 'host.docker.internal')
+        os.environ['PGHOST'] = DATABASES['default']['HOST']
     
-    print(f"FINAL CONNECTION CONFIG: Host={DATABASES['default'].get('HOST')}, DB={DATABASES['default'].get('NAME')}, User={DATABASES['default'].get('USER')}")
-    print("="*50 + "\n")
+    # Simple, clean log for confirmation
+    print(f"--- Container DB Host: {DATABASES['default']['HOST']} ---")

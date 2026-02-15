@@ -29,6 +29,7 @@ COPY permissions ./permissions
 
 # Expose port
 ENV PORT=8080
+ENV DB_HOST=host.docker.internal
 EXPOSE 8080
 
 # Start command
