@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import timedelta
 
 # Environment settings
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Base settings
 BASE_DIR = Path(__file__).resolve().parent.parent
