@@ -1,14 +1,16 @@
 # Add to your myproject/settings.py:
+import os
+# Must define before any use (line 288); deploy may use older copy without later definitions
+IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
 
 from pathlib import Path
-import os
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 
 # Frontend URL configuration - define early to avoid NameError
-# This MUST be defined before any usage in CORS configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 
 # Add to INSTALLED_APPS
@@ -282,24 +284,25 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 # ==============================================================================
 # FINAL CONFIGURATION OVERRIDES
 # ==============================================================================
+# Self-contained logic to avoid NameErrors if definitions at top fail
+_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes')
 
-# Detection logic for different environments
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-IS_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or os.getenv('DOCKER_CONTAINER') == 'true'
+print("\n" + "="*60)
+print(f"--- LEXIE CONFIG LOADED ---")
+print(f"RAILWAY: {_RAILWAY} | DOCKER: {_DOCKER}")
+print("="*60 + "\n")
 
-if IS_RAILWAY:
-    print("--- RAILWAY DEPLOYMENT DETECTED ---")
-    # On Railway, the database host is provided by the environment (PGHOST, etc.)
-elif IS_DOCKER:
-    print("\n" + "!"*60)
-    print("!!! LOCAL DOCKER DETECTED - FORCING HOST TO host.docker.internal !!!")
-    print("!"*60 + "\n")
-    
-    # Only override if the current host is likely a local default
+if _RAILWAY:
+    print(">>> RAILWAY MODE ACTIVE - Using environment-provided host")
+elif _DOCKER:
     current_host = DATABASES['default'].get('HOST')
     if current_host in ['localhost', '127.0.0.1', '::1', None]:
-        print(f"DEBUG: Overriding local DB_HOST '{current_host}' -> 'host.docker.internal'")
+        print(f">>> LOCAL DOCKER DETECTED - FORCING host.docker.internal (Was: {current_host})")
         DATABASES['default']['HOST'] = 'host.docker.internal'
         os.environ['PGHOST'] = 'host.docker.internal'
-    
-    print(f"DEBUG: Final Host set to: {DATABASES['default']['HOST']}")
+    else:
+        print(f">>> LOCAL DOCKER DETECTED - Using existing host: {current_host}")
+
+print(f"FINAL DATABASE HOST: {DATABASES['default'].get('HOST')}")
+print("="*60 + "\n")

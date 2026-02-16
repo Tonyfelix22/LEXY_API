@@ -1,2 +1,0 @@
-# Force Vercel Rebuild for CORS Fix
-# This file triggers a new deployment
