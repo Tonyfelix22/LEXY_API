@@ -1,19 +1,21 @@
-# Add to your myproject/settings.py:
 import os
-# Must define before any use (line 288); deploy may use older copy without later definitions
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
-
+import urllib.parse
 from pathlib import Path
 from datetime import timedelta
 
+# Environment detection
+IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
+
+# Base settings
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
-# Frontend URL configuration - define early to avoid NameError
+# Frontend URL
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 
-# Add to INSTALLED_APPS
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,62 +36,7 @@ INSTALLED_APPS = [
     'notifications',
 ]
 
-
-# PostgreSQL Database Configuration
-# URLs / WSGI
-ROOT_URLCONF = 'LEXY_API.urls'
-WSGI_APPLICATION = 'LEXY_API.wsgi.application'
-
-# Database Configuration - Supports Railway Postgres environment variables
-# Railway provides: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD
-# Or DATABASE_URL format: postgresql://user:password@host:port/database
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE') or os.getenv('DB_NAME', 'LEXYDB'),
-        'USER': os.getenv('PGUSER') or os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('PGPASSWORD') or os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('PGHOST') or os.getenv('DB_HOST', 'host.docker.internal'),
-        'PORT': os.getenv('PGPORT') or os.getenv('DB_PORT', '5432'),
-    }
-}
-
-# If DATABASE_URL is provided (Railway sometimes uses this), parse it
-database_url = os.getenv('DATABASE_URL')
-if database_url:
-    # Parse DATABASE_URL format: postgresql://user:password@host:port/database
-    import urllib.parse
-    result = urllib.parse.urlparse(database_url)
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': result.path[1:] if result.path else os.getenv('PGDATABASE', 'postgres'),
-        'USER': result.username or os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': result.password or os.getenv('PGPASSWORD', ''),
-        'HOST': result.hostname or os.getenv('PGHOST', 'localhost'),
-        'PORT': result.port or os.getenv('PGPORT', '5432'),
-    }
-
-# REST Framework Configuration
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',  # Add TokenAuth support for DRF tokens
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-        "users.permissions.SuperuserGlobalAccess",
-    ),
-}
-
-AUTH_USER_MODEL = 'auth.User'
-
-
-
-
-
+# Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -102,6 +49,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# URL configuration
+ROOT_URLCONF = 'LEXY_API.urls'
+WSGI_APPLICATION = 'LEXY_API.wsgi.application'
+
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -117,67 +69,55 @@ TEMPLATES = [
         },
     },
 ]
-# Debug mode - disable in production
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+# Database configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'LEXYDB'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+    }
+}
 
-# FORCE CORS for Railway deployment - always allow all origins
-# This ensures CORS works regardless of environment detection
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = False
-CORS_ALLOW_ALL_HEADERS = True
-CORS_ALLOW_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-    "HEAD",
-]
+# Parse DATABASE_URL if provided
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    result = urllib.parse.urlparse(database_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': result.path[1:] if result.path else os.getenv('PGDATABASE', 'postgres'),
+        'USER': result.username or os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': result.password or os.getenv('PGPASSWORD', ''),
+        'HOST': result.hostname or os.getenv('PGHOST', 'localhost'),
+        'PORT': result.port or os.getenv('PGPORT', '5432'),
+    }
 
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
+# Override host for Docker if needed
+if IS_DOCKER:
+    current_host = DATABASES['default']['HOST']
+    if current_host in ['localhost', '127.0.0.1', '::1']:
+        DATABASES['default']['HOST'] = 'host.docker.internal'
 
-CORS_ALLOW_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-]
-
-
-# Consolidate Frontend URL detection
-
-# CORS Configuration - Support both local development and Railway deployment
+# CORS configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:3001",  # React local dev
+    "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://192.168.0.105:3000",
     "http://192.168.0.105:8000",
     "http://192.168.0.105:3001",
     "http://192.168.2.23:3000",
-    "https://lexy-api.vercel.app",  # Production Vercel
-    "https://lexy-api-git-main-tonyfelix22s-projects.vercel.app", # Vercel main branch
-    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",  # Current Vercel preview
-    "https://lexyapi-production.up.railway.app",  # Railway backend itself
+    "https://lexy-api.vercel.app",
+    "https://lexy-api-git-main-tonyfelix22s-projects.vercel.app",
+    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",
+    "https://lexyapi-production.up.railway.app",
 ]
 
-# Add frontend URL from environment variable if provided
+# Add frontend URL from environment
 if FRONTEND_URL:
     for url in FRONTEND_URL.split(','):
         url = url.strip()
@@ -187,8 +127,12 @@ if FRONTEND_URL:
             else:
                 CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://[a-z0-9-]+\.vercel\.app$",
+    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
+]
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -210,12 +154,7 @@ CORS_ALLOW_METHODS = [
     "OPTIONS",
 ]
 
-# Allow Vercel preview deployments (*.vercel.app)
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://[a-z0-9-]+\.vercel\.app$",
-    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
-]
-# CSRF Configuration
+# CSRF configuration
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
@@ -225,7 +164,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://lexyapi-production.up.railway.app",
 ]
 
-# Also trust the FRONTEND_URL for CSRF if provided
 if FRONTEND_URL:
     for url in FRONTEND_URL.split(','):
         url = url.strip()
@@ -235,44 +173,46 @@ if FRONTEND_URL:
                     CSRF_TRUSTED_ORIGINS.append(url)
             else:
                 for proto in ['https://', 'http://']:
-                    if proto + url not in CSRF_TRUSTED_ORIGINS:
-                        CSRF_TRUSTED_ORIGINS.append(proto + url)
+                    full_url = proto + url
+                    if full_url not in CSRF_TRUSTED_ORIGINS:
+                        CSRF_TRUSTED_ORIGINS.append(full_url)
 
-
-# CSRF Configuration - Use secure cookies in production (Railway uses HTTPS)
 CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False').lower() == 'true' or not DEBUG
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access CSRF token
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+        "users.permissions.SuperuserGlobalAccess",
+    ),
+}
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+AUTH_USER_MODEL = 'auth.User'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# JWT Authentication Settings
+# JWT settings
 SIMPLE_JWT = {
-    # Token lifetimes
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
-
-    # Rotation and blacklisting
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-
-    # Auth & signing
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,  # Explicit for clarity & key management
+    "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-
-    # ERP audit & usability
     "UPDATE_LAST_LOGIN": True,
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 }
 
-# Email Configuration
+# Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -281,28 +221,9 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
-# ==============================================================================
-# FINAL CONFIGURATION OVERRIDES
-# ==============================================================================
-# Self-contained logic to avoid NameErrors if definitions at top fail
-_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
-_DOCKER = os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes')
+# Static files
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-print("\n" + "="*60)
-print(f"--- LEXIE CONFIG LOADED ---")
-print(f"RAILWAY: {_RAILWAY} | DOCKER: {_DOCKER}")
-print("="*60 + "\n")
-
-if _RAILWAY:
-    print(">>> RAILWAY MODE ACTIVE - Using environment-provided host")
-elif _DOCKER:
-    current_host = DATABASES['default'].get('HOST')
-    if current_host in ['localhost', '127.0.0.1', '::1', None]:
-        print(f">>> LOCAL DOCKER DETECTED - FORCING host.docker.internal (Was: {current_host})")
-        DATABASES['default']['HOST'] = 'host.docker.internal'
-        os.environ['PGHOST'] = 'host.docker.internal'
-    else:
-        print(f">>> LOCAL DOCKER DETECTED - Using existing host: {current_host}")
-
-print(f"FINAL DATABASE HOST: {DATABASES['default'].get('HOST')}")
-print("="*60 + "\n")
+print(f"DATABASE HOST: {DATABASES['default']['HOST']}")

@@ -14,9 +14,6 @@ load_dotenv(override=True)
 
 def run_migrations():
     """Run Django migrations, but don't crash if DB is not ready."""
-    print("\n" + "="*60)
-    print("=== LEXIE ERP - START_SERVER.PY / RUN_MIGRATIONS ===")
-    print("="*60 + "\n")
     print(f"Checking database connection (Host: {os.getenv('DB_HOST', 'localhost')})...")
     print("Running database migrations...")
     max_attempts = int(os.getenv('MIGRATE_MAX_ATTEMPTS', '12'))

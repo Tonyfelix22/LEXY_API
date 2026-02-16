@@ -11,9 +11,6 @@ except ImportError:
 
 def main():
     """Run administrative tasks."""
-    print("\n" + "#"*60)
-    print("### LEXIE ERP - MANAGE.PY STARTING UP ###")
-    print("#"*60 + "\n")
     load_dotenv(override=True)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LEXY_API.settings')
     try:
