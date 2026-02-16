@@ -3,8 +3,7 @@ import urllib.parse
 from pathlib import Path
 from datetime import timedelta
 
-# Environment detection (must be first)
-IS_RAILWAY = os.getenv('RAILWAY_ENVIRONMENT') is not None or os.getenv('RAILWAY_PROJECT_ID') is not None
+# Environment detection
 IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
 
 # Base settings
@@ -71,15 +70,15 @@ TEMPLATES = [
     },
 ]
 
-# Database configuration - Matching your Railway Service Variables
+# Database configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME') or os.getenv('PGDATABASE', 'LEXYDB'),
-        'USER': os.getenv('DB_USER') or os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD') or os.getenv('PGPASSWORD', 'Password26'),
-        'HOST': os.getenv('DB_HOST') or os.getenv('PGHOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT') or os.getenv('PGPORT', '5432'),
+        'NAME': os.getenv('DB_NAME', 'LEXYDB'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -96,19 +95,11 @@ if database_url:
         'PORT': result.port or os.getenv('PGPORT', '5432'),
     }
 
-# Override host for Docker or Railway rescue
-if IS_DOCKER and not IS_RAILWAY:
+# Override host for Docker if needed
+if IS_DOCKER:
     current_host = DATABASES['default']['HOST']
     if current_host in ['localhost', '127.0.0.1', '::1']:
         DATABASES['default']['HOST'] = 'host.docker.internal'
-
-# Railway Rescue: If on Railway and host is 'localhost', try to use internal PGHOST
-if IS_RAILWAY and DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1', None]:
-    pghost = os.getenv('PGHOST')
-    if pghost and pghost not in ['localhost', '127.0.0.1']:
-        DATABASES['default']['HOST'] = pghost
-        # Also update os.environ so other tools (manage.py) see it
-        os.environ['PGHOST'] = pghost
 
 # CORS configuration
 CORS_ALLOWED_ORIGINS = [
@@ -235,34 +226,4 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Debug & Environment Output - Aligned with your Railway Dashboard
-print("\n" + "="*60)
-print("LEXIE ERP - ENVIRONMENT DIAGNOSTICS")
-print("="*60)
-print(f"IS_RAILWAY: {IS_RAILWAY}")
-print(f"IS_DOCKER:  {IS_DOCKER}")
-
-if IS_RAILWAY:
-    print("\nRAILWAY SERVICE VARIABLES (From Dashboard):")
-    print(f"  DB_HOST:     {os.getenv('DB_HOST')}")
-    print(f"  DB_NAME:     {os.getenv('DB_NAME')}")
-    print(f"  DB_USER:     {os.getenv('DB_USER')}")
-    print(f"  DB_PORT:     {os.getenv('DB_PORT')}")
-    print("\nRAILWAY PLUGIN VARIABLES (Standard):")
-    print(f"  PGHOST:      {os.getenv('PGHOST')}")
-    print(f"  PGDATABASE:  {os.getenv('PGDATABASE')}")
-
-print("\nFINAL DJANGO DATABASE CONFIG:")
-print(f"  HOST:        {DATABASES['default'].get('HOST')}")
-print(f"  PORT:        {DATABASES['default'].get('PORT')}")
-print(f"  NAME:        {DATABASES['default'].get('NAME')}")
-print(f"  USER:        {DATABASES['default'].get('USER')}")
-
-if IS_RAILWAY and DATABASES['default'].get('HOST') in ['localhost', '127.0.0.1']:
-    print("\n" + "!"*60)
-    print("CRITICAL WARNING: App is on Railway but pointing to 'localhost'!")
-    print("This will definitely fail unless your DB is in the same container.")
-    print("Please update DB_HOST in Railway to your database hostname.")
-    print("!"*60)
-
-print("="*60 + "\n")
+print(f"DATABASE HOST: {DATABASES['default']['HOST']}")

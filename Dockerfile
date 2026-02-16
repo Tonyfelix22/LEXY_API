@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy Django project files
 COPY manage.py .
 COPY start_server.py .
+COPY .env .
 COPY LEXY_API ./LEXY_API
 COPY API ./API
 COPY Finance ./Finance
