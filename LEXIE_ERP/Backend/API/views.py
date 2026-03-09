@@ -12,13 +12,6 @@ from audit.models import AuditLog  # optional, if you have auditing
 from .models import Product
 from .serializers import ProductSerializer
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def health_check(request):
-    """
-    Public endpoint for Render health checks.
-    """
-    return Response({"status": "ok"}, status=status.HTTP_200_OK)
 
 # ------------------------------
 # Authentication / Login API
