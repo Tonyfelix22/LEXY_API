@@ -9,7 +9,8 @@ router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 
 urlpatterns = [
+    path('health/', views.health_check, name='health_check'),
     path('', include(router.urls)),
-path('login/', views.login_api, name='login_api'),
+    path('login/', views.login_api, name='login_api'),
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard_stats'),
 ]
