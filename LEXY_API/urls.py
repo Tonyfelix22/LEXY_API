@@ -25,16 +25,8 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from . import frontend_views
-from .views import health_check
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # 🔐 JWT Authentication Endpoints
-    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
     # 🌐 App Endpoints
     path('api/', include('API.urls')),
@@ -44,8 +36,8 @@ urlpatterns = [
     path('api/audit/', include('audit.urls')),
     path('api/reports/', include('reports.urls')),
     path('api/notifications/', include('notifications.urls')),
-    
-    # Root path - simple health check
-    path('', health_check),
+
+    # 🛠️ DRF Auth for browseable API
+    path('api-auth/', include('rest_framework.urls')),
 ]
 

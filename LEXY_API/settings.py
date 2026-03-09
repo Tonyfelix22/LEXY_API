@@ -3,13 +3,12 @@ import urllib.parse
 from pathlib import Path
 from datetime import timedelta
 
-# Environment detection
-IS_DOCKER = bool(os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv') or str(os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'))
+# Environment settings
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 # Base settings
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 # Frontend URL
@@ -82,39 +81,14 @@ DATABASES = {
     }
 }
 
-# Parse DATABASE_URL if provided
-database_url = os.getenv('DATABASE_URL')
-if database_url:
-    result = urllib.parse.urlparse(database_url)
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': result.path[1:] if result.path else os.getenv('PGDATABASE', 'postgres'),
-        'USER': result.username or os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': result.password or os.getenv('PGPASSWORD', ''),
-        'HOST': result.hostname or os.getenv('PGHOST', 'localhost'),
-        'PORT': result.port or os.getenv('PGPORT', '5432'),
-    }
-
-# Override host for Docker if needed
-if IS_DOCKER:
-    current_host = DATABASES['default']['HOST']
-    if current_host in ['localhost', '127.0.0.1', '::1']:
-        DATABASES['default']['HOST'] = 'host.docker.internal'
-
 # CORS configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:3002",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "http://192.168.0.105:3000",
-    "http://192.168.0.105:8000",
-    "http://192.168.0.105:3001",
-    "http://192.168.2.23:3000",
-    "https://lexy-api.vercel.app",
-    "https://lexy-api-git-main-tonyfelix22s-projects.vercel.app",
-    "https://lexy-cm77r8g3c-tonyfelix22s-projects.vercel.app",
-    "https://lexyapi-production.up.railway.app",
+    "http://127.0.0.1:3002",
 ]
 
 # Add frontend URL from environment
@@ -127,10 +101,7 @@ if FRONTEND_URL:
             else:
                 CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://[a-z0-9-]+\.vercel\.app$",
-    r"^https://[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$",
-]
+CORS_ALLOWED_ORIGIN_REGEXES = []
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -158,10 +129,10 @@ CORS_ALLOW_METHODS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:3002",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "https://lexy-api.vercel.app",
-    "https://lexyapi-production.up.railway.app",
+    "http://127.0.0.1:3002",
 ]
 
 if FRONTEND_URL:
