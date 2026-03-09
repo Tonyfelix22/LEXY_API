@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: lexy-api
+    runtime: python
+    rootDir: Backend
+    buildCommand: "pip install --no-cache-dir -r requirements.txt"
+    startCommand: "gunicorn LEXY_API.wsgi:application"
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13"
