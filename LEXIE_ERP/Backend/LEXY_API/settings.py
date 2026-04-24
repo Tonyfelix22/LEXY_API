@@ -109,15 +109,8 @@ if FRONTEND_URL:
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
+    "accept", "accept-encoding", "authorization", "content-type",
+    "dnt", "origin", "user-agent", "x-csrftoken", "x-requested-with",
 ]
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
@@ -146,7 +139,6 @@ CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False').lower() == 'true' 
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-# REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
@@ -176,7 +168,6 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -185,7 +176,6 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
-# Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
