@@ -31,10 +31,12 @@ export function getBaseUrl(): Promise<string> {
                 cachedBase = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;
                 return cachedBase;
             }
-            cachedBase =
+            const fallbackBase =
                 (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BASE_API) ||
                 (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
                 DEFAULT_BASE;
+            const cleanFallback = fallbackBase.replace(/\/+$/, "");
+            cachedBase = cleanFallback.endsWith("/api") ? cleanFallback : `${cleanFallback}/api`;
             return cachedBase;
         })
         .catch(() => {
