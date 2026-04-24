@@ -25,7 +25,12 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
+from API.views import health_check
+
 urlpatterns = [
+    path('', health_check, name='root_health'),
+    path('health/', health_check, name='health_check'),
+    path('status/', health_check, name='status_check'),
     path('admin/', admin.site.urls),
 
     # 🌐 App Endpoints
