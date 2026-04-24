@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getAuthToken, saveAuthToken, clearAuthToken } from "@/utils/token";
 import { getBaseUrl } from "@/utils/config";
 
@@ -35,29 +35,30 @@ const isDev = typeof process !== "undefined" && process.env.NODE_ENV === "develo
 const devLog = (...args: unknown[]) => { if (isDev) console.log(...args); };
 const devWarn = (...args: unknown[]) => { if (isDev) console.warn(...args); };
 
+// Helper functions outside component to avoid closure issues
+const buildUrl = (base: string, path: string) => {
+    const b = base.replace(/\/?$/, "");
+    const p = path.startsWith("/") ? path : `/${path}`;
+    return `${b}${p}`;
+};
+
+const safeJson = async (res: Response) => {
+    try {
+        return await res.json();
+    } catch {
+        try {
+            const text = await res.text();
+            return { raw: text };
+        } catch {
+            return { error: "unable to parse response" };
+        }
+    }
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    const buildUrl = (base: string, path: string) => {
-        const b = base.replace(/\/?$/, "");
-        const p = path.startsWith("/") ? path : `/${path}`;
-        return `${b}${p}`;
-    };
-
-    const safeJson = async (res: Response) => {
-        try {
-            return await res.json()
-        } catch {
-            try {
-                const text = await res.text()
-                return { raw: text }
-            } catch {
-                return { error: "unable to parse response" }
-            }
-        }
-    }
 
     const fetchUser = async (authToken: string): Promise<User | null> => {
         const BASE_API = await getBaseUrl();
