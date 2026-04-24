@@ -51,30 +51,6 @@ export default function EmployeeHistoryPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    // ✅ Load initial data
-    useEffect(() => {
-        if (!token) return
-        if (!isHRAdmin) {
-            setError("Access denied: HR administrators only.")
-            setLoading(false)
-            return
-        }
-        loadData()
-    }, [token, isHRAdmin, loadData])
-
-    const loadData = useCallback(async () => {
-        setLoading(true)
-        try {
-            await Promise.all([fetchEmployees(), fetchEmploymentHistory(), fetchAdmins(), fetchDepartments()])
-        } catch (err: any) {
-            console.error("Error loading HR data:", err)
-            setError(err.message || "Failed to load HR data.")
-            toast.error("Failed to load data")
-        } finally {
-            setLoading(false)
-        }
-    }, [fetchEmployees, fetchEmploymentHistory, fetchAdmins, fetchDepartments])
-
     // ✅ Fetch Employees
     const fetchEmployees = useCallback(async () => {
         try {
@@ -110,8 +86,8 @@ export default function EmployeeHistoryPage() {
                 headers: { Authorization: `Token ${token}` },
             })
             const users = data.results || data
-            const adminUsers = users.filter((u: any) => 
-                u.is_superuser || 
+            const adminUsers = users.filter((u: any) =>
+                u.is_superuser ||
                 ["ADMIN", "HR", "MANAGER"].includes(u.profile?.role?.toUpperCase() || "")
             )
             setAdmins(adminUsers)
@@ -133,6 +109,30 @@ export default function EmployeeHistoryPage() {
             setDepartments([])
         }
     }, [token])
+
+    const loadData = useCallback(async () => {
+        setLoading(true)
+        try {
+            await Promise.all([fetchEmployees(), fetchEmploymentHistory(), fetchAdmins(), fetchDepartments()])
+        } catch (err: any) {
+            console.error("Error loading HR data:", err)
+            setError(err.message || "Failed to load HR data.")
+            toast.error("Failed to load data")
+        } finally {
+            setLoading(false)
+        }
+    }, [fetchEmployees, fetchEmploymentHistory, fetchAdmins, fetchDepartments])
+
+    // ✅ Load initial data
+    useEffect(() => {
+        if (!token) return
+        if (!isHRAdmin) {
+            setError("Access denied: HR administrators only.")
+            setLoading(false)
+            return
+        }
+        loadData()
+    }, [token, isHRAdmin, loadData])
 
     // ✅ Create a new record
     const handleCreateRecord = async (formData: Record<string, string>) => {

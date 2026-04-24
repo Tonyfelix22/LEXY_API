@@ -26,17 +26,6 @@ export default function DepartmentsPage() {
     const [showModal, setShowModal] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // ✅ Fetch departments when token changes
-    useEffect(() => {
-        if (!token) return
-        if (!isHRAdmin) {
-            setError("Access denied: HR administrators only.")
-            setIsLoading(false)
-            return
-        }
-        fetchDepartments()
-    }, [token, isHRAdmin, fetchDepartments])
-
     // ✅ Fetch all departments
     const fetchDepartments = useCallback(async () => {
         setIsLoading(true)
@@ -55,6 +44,17 @@ export default function DepartmentsPage() {
             setIsLoading(false)
         }
     }, [token])
+
+    // ✅ Fetch departments when token changes
+    useEffect(() => {
+        if (!token) return
+        if (!isHRAdmin) {
+            setError("Access denied: HR administrators only.")
+            setIsLoading(false)
+            return
+        }
+        fetchDepartments()
+    }, [token, isHRAdmin, fetchDepartments])
 
     // ✅ Save or update a department
     const handleSave = async (formData: any) => {

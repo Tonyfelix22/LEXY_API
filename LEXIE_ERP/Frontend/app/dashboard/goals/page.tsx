@@ -31,12 +31,6 @@ export default function GoalsDashboard() {
     const [status, setStatus] = useState<"PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED">("PENDING");
     const [progress, setProgress] = useState(0);
 
-    useEffect(() => {
-        if (!authLoading && user) {
-            fetchGoals();
-        }
-    }, [user, authLoading, fetchGoals]);
-
     const fetchGoals = useCallback(async () => {
         try {
             setLoading(true);
@@ -51,6 +45,12 @@ export default function GoalsDashboard() {
             setLoading(false);
         }
     }, [user?.employee?.id]);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            fetchGoals();
+        }
+    }, [user, authLoading, fetchGoals]);
 
     const handleCreateGoal = async (e: React.FormEvent) => {
         e.preventDefault();
