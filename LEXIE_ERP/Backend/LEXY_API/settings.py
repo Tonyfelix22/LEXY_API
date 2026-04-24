@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework.authtoken',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
     'users.apps.UsersConfig',
     'API',
     'Finance.apps.FinanceConfig',
@@ -65,6 +66,7 @@ TEMPLATES = [
 
 # Database
 DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+DATABASE_URL = DATABASE_URL.replace('&channel_binding=require', '').replace('?channel_binding=require', '')
 
 if DATABASE_URL:
     DATABASES = {
