@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { invoiceService, Invoice } from "@/services/invoiceService";
 import { Button } from "@/components/ui/button";
@@ -35,9 +35,9 @@ export default function InvoiceDetailClient() {
 
     useEffect(() => {
         if (params.id) fetchInvoice(Number(params.id));
-    }, [params.id]);
+    }, [params.id, fetchInvoice]);
 
-    const fetchInvoice = async (id: number) => {
+    const fetchInvoice = useCallback(async (id: number) => {
         try {
             const data = await invoiceService.getInvoice(id);
             setInvoice(data);
@@ -49,7 +49,7 @@ export default function InvoiceDetailClient() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
 
     const handlePost = async () => {
         if (!invoice) return;

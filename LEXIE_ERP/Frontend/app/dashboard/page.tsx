@@ -47,12 +47,12 @@ export default function Dashboard() {
                 AUDITOR: "Auditor",
             };
             const roleName = isSuperAdmin ? "Super Admin" : (roleNames[role] || "User");
-            setStats({
-                ...stats,
+            setStats(prev => ({
+                ...prev,
                 welcomeMessage: `Welcome, ${user.username}! You are logged in as ${roleName}`,
-            });
+            }));
         }
-    }, [user, isLoading, router, isSuperAdmin]);
+    }, [user, isLoading, router, isSuperAdmin, isHRAdmin, isFinanceAdmin, isAuditAdmin]);
 
     if (isLoading) {
         return (
