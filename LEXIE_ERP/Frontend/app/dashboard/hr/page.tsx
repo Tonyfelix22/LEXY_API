@@ -31,15 +31,6 @@ export default function HRDashboard() {
     const [error, setError] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<'classic' | 'modern'>('modern')
 
-    useEffect(() => {
-        if (token && isHRAdmin) {
-            fetchDashboardStats()
-        } else {
-            setLoading(false)
-            if (!isHRAdmin) setError("Access denied: HR only")
-        }
-    }, [token, isHRAdmin, fetchDashboardStats])
-
     const fetchDashboardStats = useCallback(async () => {
         setLoading(true)
         setError(null)
@@ -81,6 +72,15 @@ export default function HRDashboard() {
             setLoading(false)
         }
     }, [])
+
+    useEffect(() => {
+        if (token && isHRAdmin) {
+            fetchDashboardStats()
+        } else {
+            setLoading(false)
+            if (!isHRAdmin) setError("Access denied: HR only")
+        }
+    }, [token, isHRAdmin, fetchDashboardStats])
 
     const formatNumber = (num: number) =>
         new Intl.NumberFormat("en-US").format(num)
