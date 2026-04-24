@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
+import { 
+    Users, 
+    Wallet, 
+    Shield, 
+    BarChart3, 
+    DollarSign, 
+    UserPlus,
+    TrendingUp,
+    ArrowRight,
+    Zap
+} from "lucide-react";
 
 interface DashboardStats {
     totalUsers: number;
@@ -45,8 +56,11 @@ export default function Dashboard() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-slate-900">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+            <div className="flex items-center justify-center min-h-screen bg-background">
+                <div className="relative">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/30 border-t-primary"></div>
+                    <div className="absolute inset-0 animate-pulse-glow rounded-full"></div>
+                </div>
             </div>
         );
     }
@@ -64,28 +78,45 @@ export default function Dashboard() {
         MANAGER: "Manager",
         STAFF: "Staff",
         AUDIT: "Audit Admin",
-        AUDITOR: "Auditor", // Handle potential legacy/manual value
+        AUDITOR: "Auditor",
     };
 
     const displayRole = isSuperAdmin ? "Super Admin" : (roleNames[role] || role);
 
     return (
-        <div className="space-y-6 bg-slate-900 min-h-screen p-6">
-            <div>
-                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-                <p className="text-slate-400 mt-2">{stats.welcomeMessage}</p>
+        <div className="space-y-8 bg-background min-h-screen p-6 animate-fadeIn">
+            {/* Welcome Header */}
+            <div className="relative overflow-hidden rounded-2xl glass-card p-8">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-0"></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
+                            <Zap className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gradient">Dashboard</h1>
+                            <p className="text-foreground/60 mt-1">{stats.welcomeMessage}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Role-based quick access */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {/* HR Access */}
                 {(isHRAdmin || role === "HR") && (
                     <div
                         onClick={() => router.push("/dashboard/hr")}
-                        className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                        className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Human Resources</h3>
-                        <p className="text-sm text-slate-400">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                                <Users className="w-7 h-7 text-primary" />
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Human Resources</h3>
+                        <p className="text-sm text-foreground/60">
                             Manage employees, departments, and payroll
                         </p>
                     </div>
@@ -95,10 +126,16 @@ export default function Dashboard() {
                 {(isFinanceAdmin || role === "FINANCE") && (
                     <div
                         onClick={() => router.push("/dashboard/finance")}
-                        className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                        className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Finance</h3>
-                        <p className="text-sm text-slate-400">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                                <Wallet className="w-7 h-7 text-primary" />
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Finance</h3>
+                        <p className="text-sm text-foreground/60">
                             Manage accounts, journal entries, and financial records
                         </p>
                     </div>
@@ -108,10 +145,16 @@ export default function Dashboard() {
                 {(isAuditAdmin || role === "AUDIT" || role === "AUDITOR") && (
                     <div
                         onClick={() => router.push("/dashboard/audit")}
-                        className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                        className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Audit Logs</h3>
-                        <p className="text-sm text-slate-400">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                                <Shield className="w-7 h-7 text-primary" />
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Audit Logs</h3>
+                        <p className="text-sm text-foreground/60">
                             View system activity and audit trails
                         </p>
                     </div>
@@ -120,10 +163,16 @@ export default function Dashboard() {
                 {/* Reports Center - Available to all authenticated users */}
                 <div
                     onClick={() => router.push("/dashboard/reports")}
-                    className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                    className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                 >
-                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Reports Center</h3>
-                    <p className="text-sm text-slate-400">
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                            <BarChart3 className="w-7 h-7 text-primary" />
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Reports Center</h3>
+                    <p className="text-sm text-foreground/60">
                         Generate and export financial and HR reports
                     </p>
                 </div>
@@ -132,10 +181,16 @@ export default function Dashboard() {
                 {(isHRAdmin || isFinanceAdmin || role === "HR" || role === "FINANCE") && (
                     <div
                         onClick={() => router.push("/dashboard/hr/payroll_runs")}
-                        className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                        className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Payroll</h3>
-                        <p className="text-sm text-slate-400">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                                <DollarSign className="w-7 h-7 text-primary" />
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Payroll</h3>
+                        <p className="text-sm text-foreground/60">
                             View and manage payroll runs
                         </p>
                     </div>
@@ -145,10 +200,16 @@ export default function Dashboard() {
                 {isSuperAdmin && (
                     <div
                         onClick={() => router.push("/register")}
-                        className="p-6 bg-slate-800 rounded-lg shadow-md hover:shadow-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer border border-slate-700 group"
+                        className="glass-card rounded-2xl p-6 hover-lift cursor-pointer group border-border/50 hover:border-primary/50"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-sky-400 transition-colors">Create Admin Account</h3>
-                        <p className="text-sm text-slate-400">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-all-smooth">
+                                <UserPlus className="w-7 h-7 text-primary" />
+                            </div>
+                            <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all-smooth" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Create Admin Account</h3>
+                        <p className="text-sm text-foreground/60">
                             Register new HR, Finance, or Audit Admins
                         </p>
                     </div>
@@ -156,25 +217,34 @@ export default function Dashboard() {
             </div>
 
             {/* User Info Card */}
-            <div className="p-6 bg-slate-800 rounded-lg shadow-md border border-slate-700">
-                <h2 className="text-xl font-semibold text-white mb-4">Your Profile</h2>
-                <div className="space-y-2">
-                    <div className="flex justify-between border-b border-slate-700 pb-2">
-                        <span className="text-slate-400">Username:</span>
-                        <span className="font-medium text-white">{user.username}</span>
+            <div className="glass-card rounded-2xl p-6 border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-primary" />
                     </div>
-                    <div className="flex justify-between border-b border-slate-700 pb-2">
-                        <span className="text-slate-400">Email:</span>
-                        <span className="font-medium text-white">{user.email}</span>
+                    <h2 className="text-xl font-bold text-foreground">Your Profile</h2>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                        <div className="text-sm text-foreground/60 mb-1">Username</div>
+                        <div className="font-semibold text-foreground">{user.username}</div>
                     </div>
-                    <div className="flex justify-between border-b border-slate-700 pb-2">
-                        <span className="text-slate-400">Role:</span>
-                        <span className="font-medium text-sky-400">{displayRole}</span>
+                    
+                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                        <div className="text-sm text-foreground/60 mb-1">Email</div>
+                        <div className="font-semibold text-foreground">{user.email}</div>
                     </div>
+                    
+                    <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                        <div className="text-sm text-foreground/60 mb-1">Role</div>
+                        <div className="font-semibold text-primary">{displayRole}</div>
+                    </div>
+                    
                     {user.department && (
-                        <div className="flex justify-between border-b border-slate-700 pb-2">
-                            <span className="text-slate-400">Department:</span>
-                            <span className="font-medium text-white">{user.department}</span>
+                        <div className="p-4 rounded-xl bg-card/50 border border-border/50">
+                            <div className="text-sm text-foreground/60 mb-1">Department</div>
+                            <div className="font-semibold text-foreground">{user.department}</div>
                         </div>
                     )}
                 </div>

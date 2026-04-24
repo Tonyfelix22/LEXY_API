@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import toast from "react-hot-toast";
+import { Lock, User, Zap, ArrowRight } from "lucide-react";
 
 export default function LoginForm() {
     const [username, setUsername] = useState("");
@@ -61,56 +62,112 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950">
-            <div className="w-full max-w-md bg-slate-900 rounded-lg shadow-xl p-8 border border-sky-400/30">
-                <h1 className="text-3xl font-bold text-center mb-2 text-white">LEXIE ERP</h1>
-                <p className="text-center text-gray-400 mb-8">Sign in to your account</p>
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+            {/* Animated Background */}
+            <div className="fixed inset-0 gradient-mesh animate-gradient opacity-40"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-200 mb-2">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            placeholder="Enter your username"
-                            required
-                        />
+            {/* Login Card */}
+            <div className="relative z-10 w-full max-w-md mx-4 animate-fadeIn">
+                {/* Logo */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-xl shadow-primary/30 mb-4 animate-pulse-glow">
+                        <Zap className="w-8 h-8 text-white" />
                     </div>
+                    <h1 className="text-4xl font-bold text-gradient mb-2">LEXIE ERP</h1>
+                    <p className="text-foreground/60">Sign in to your account</p>
+                </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-200 mb-2">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                            placeholder="Enter your password"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <a href="/forgot-password" className="text-sm text-sky-400 hover:underline">
-                            Forgot Password?
-                        </a>
-                    </div>
+                {/* Glass Card Form */}
+                <div className="glass-card rounded-2xl p-8 shadow-2xl">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-foreground/80 mb-3">
+                                Username
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Enter your username"
+                                    required
+                                />
+                            </div>
+                        </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 rounded-lg transition disabled:opacity-50"
-                    >
-                        {isLoading ? "Logging in..." : "Login"}
-                    </button>
+                        <div>
+                            <label className="block text-sm font-medium text-foreground/80 mb-3">
+                                Password
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Enter your password"
+                                    required
+                                />
+                            </div>
+                        </div>
 
-                    <p className="text-center text-sm text-gray-400 mt-4">
-                        Don’t have an account?{" "}
-                        <a href="/register" className="text-sky-400 font-bold hover:underline">
-                            Register
-                        </a>
+                        <div className="flex justify-end">
+                            <a href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline transition-all-smooth font-medium">
+                                Forgot Password?
+                            </a>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 rounded-xl transition-all-smooth disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 hover:shadow-primary/50 hover-lift flex items-center justify-center gap-2 group"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground"></div>
+                                    <span>Logging in...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>Sign In</span>
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-border/50"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-4 bg-card text-foreground/60">or</span>
+                            </div>
+                        </div>
+
+                        <p className="text-center text-sm text-foreground/60">
+                            Don't have an account?{" "}
+                            <a href="/register" className="text-primary font-bold hover:text-primary/80 hover:underline transition-all-smooth">
+                                Register here
+                            </a>
+                        </p>
+                    </form>
+                </div>
+
+                {/* Footer */}
+                <div className="text-center mt-6">
+                    <p className="text-xs text-foreground/40">
+                        © {new Date().getFullYear()} LEXIE ERP. All rights reserved.
                     </p>
-                </form>
+                </div>
             </div>
         </div>
     );

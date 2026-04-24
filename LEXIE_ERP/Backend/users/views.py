@@ -6,9 +6,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 from .serializers import UserSerializer, UserProfileSerializer, RegisterSerializer
@@ -64,12 +66,12 @@ def get_or_create_user_profile(user, role=None, department=None):
 
 
 # -------------------------------------------------------------------------
-#  List all users — Admin only
+#  List all users — Authenticated
 # -------------------------------------------------------------------------
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 # -------------------------------------------------------------------------
@@ -123,7 +125,7 @@ def current_user(request):
         "last_name": user.last_name,
         "groups": [g.name for g in user.groups.all()],
         "role": profile.role,
-        "department": profile.department,
+        "department": employee.department.name if employee and employee.department else profile.department,
         "is_superuser": user.is_superuser,
         "employee": employee_data,
     })
@@ -256,6 +258,8 @@ def login_user(request):
     try:
         token, _ = Token.objects.get_or_create(user=user)
         profile = get_or_create_user_profile(user)
+        employee = getattr(user, 'employee_profile', None)
+        department_name = employee.department.name if employee and employee.department else profile.department
     except Exception:
         return Response(
             {
@@ -274,7 +278,7 @@ def login_user(request):
             "username": user.username,
             "email": user.email,
             "role": profile.role,
-            "department": profile.department,
+            "department": department_name,
             "groups": [g.name for g in user.groups.all()],
             "is_superuser": user.is_superuser,
         },
@@ -305,34 +309,44 @@ def logout_user(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def reset_password(request):
-    email = request.data.get("email")
-    if not email:
+    user_email = request.data.get("email")
+    if not user_email:
         return Response({"message": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = User.objects.get(email=email)
+        user = User.objects.get(email=user_email)
     except User.DoesNotExist:
         # For security, don't reveal that the user doesn't exist
         return Response({"message": "If an account exists, a reset link has been sent."}, status=status.HTTP_200_OK)
 
     token_generator = PasswordResetTokenGenerator()
     token = token_generator.make_token(user)
-    
-    # In a real app, this would link to the frontend reset page with uid and token
-    # For now, we'll just send a simple message or link to the reset page
-    # Assuming frontend route: /reset-password/{uid}/{token}
-    reset_link = f"http://localhost:3000/reset-password?uid={user.id}&token={token}"
-    
+
+    # Build frontend reset link using configured FRONTEND_URL
+    frontend_url = settings.FRONTEND_URL or "http://localhost:3000"
+    reset_link = f"{frontend_url}/reset-password?uid={user.id}&token={token}"
+
+    # Render email templates
+    context = {
+        'user': user,
+        'reset_link': reset_link,
+    }
+    html_content = render_to_string('users/password_reset_email.html', context)
+    text_content = render_to_string('users/password_reset_email.txt', context)
+
+    # Send email with both HTML and plain text
     try:
-        send_mail(
-            subject="Password Reset Request",
-            message=f"Click the link to reset your password: {reset_link}",
+        email_message = EmailMultiAlternatives(
+            subject="Password Reset Request - LEXIE ERP",
+            body=text_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=True,
+            to=[user_email],
         )
+        email_message.attach_alternative(html_content, "text/html")
+        email_message.send(fail_silently=False)
     except Exception as e:
         print(f"Error sending email: {e}")
+        return Response({"message": "Failed to send reset email. Please try again later."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({"message": "If an account exists, a reset link has been sent."}, status=status.HTTP_200_OK)
 

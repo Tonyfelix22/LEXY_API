@@ -150,9 +150,20 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
             profile.department = validated_data.get('department').name if validated_data.get('department') else ''
             profile.save()
 
-        validated_data['user'] = user
-        employee = Employee.objects.create(**validated_data)
-        return employee
+        # The User post_save signal auto-provisions a stub Employee, to prevent uniqueness
+        # crashes on email and user fields, we must update the stub, not create a duplicate.
+        if user:
+            employee = Employee.objects.get(user=user)
+            for key, value in validated_data.items():
+                setattr(employee, key, value)
+            # Override auto-generated stub fields with provided ones
+            employee.staff_number = staff_number
+            employee.save()
+            return employee
+        else:
+            validated_data['user'] = None
+            employee = Employee.objects.create(**validated_data)
+            return employee
 
     def validate_email(self, value):
         instance = self.instance
@@ -164,6 +175,12 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
         instance = self.instance
         if Employee.objects.exclude(pk=instance.pk if instance else None).filter(staff_number=value).exists():
             raise serializers.ValidationError("An employee with this staff number already exists.")
+        return value
+
+    def validate_national_id(self, value):
+        instance = self.instance
+        if Employee.objects.exclude(pk=instance.pk if instance else None).filter(national_id=value).exists():
+            raise serializers.ValidationError("An employee with this national id already exists.")
         return value
 
     def validate(self, data):
@@ -313,7 +330,7 @@ class PayrollRunCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         payroll = PayrollRun.objects.create(**validated_data)
-        payroll.calculate_totals(commit=True)
+        payroll.calculate_totals()
         return payroll
 
     def validate_employee(self, value):
@@ -527,11 +544,61 @@ class PerformanceGoalSerializer(serializers.ModelSerializer):
 class PerformanceReviewSerializer(serializers.ModelSerializer):
     employee_name = serializers.CharField(source='employee.get_full_name', read_only=True)
     reviewer_name = serializers.CharField(source='reviewer.get_full_name', read_only=True)
-    
+
     class Meta:
         model = PerformanceReview
         fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
+
+    def validate(self, data):
+        review_period_start = data.get('review_period_start')
+        review_period_end = data.get('review_period_end')
+        employee = data.get('employee')
+        reviewer = data.get('reviewer')
+        status = data.get('status')
+
+        # Validate date range
+        if review_period_start and review_period_end:
+            if review_period_start > review_period_end:
+                raise serializers.ValidationError({
+                    "review_period_end": "Review period end date cannot be before the start date."
+                })
+
+        # Prevent employee from reviewing themselves
+        if employee and reviewer:
+            if employee == reviewer:
+                raise serializers.ValidationError({
+                    "reviewer": "An employee cannot review themselves. Please select a different reviewer."
+                })
+
+        # Check for duplicate/overlapping scheduled reviews
+        # Only check if employee and status are provided
+        if employee and review_period_start and review_period_end:
+            # Determine which reviews to check against
+            # If creating a new review, exclude self from validation
+            review_id = self.instance.id if self.instance else None
+
+            # Check for overlapping review periods with SCHEDULED or COMPLETED status
+            overlapping_reviews = PerformanceReview.objects.filter(
+                employee=employee,
+                review_period_start__lte=review_period_end,
+                review_period_end__gte=review_period_start,
+            ).exclude(id=review_id)
+
+            # Filter for reviews that are already scheduled or completed
+            conflicting_review = overlapping_reviews.filter(
+                status__in=['SCHEDULED', 'COMPLETED']
+            ).first()
+
+            if conflicting_review:
+                raise serializers.ValidationError({
+                    "employee": f"This employee already has a performance review scheduled for the period "
+                                f"{conflicting_review.review_period_start.strftime('%b %d, %Y')} to "
+                                f"{conflicting_review.review_period_end.strftime('%b %d, %Y')}. "
+                                f"Current status: {conflicting_review.status}."
+                })
+
+        return data
 
 
 # ===============================

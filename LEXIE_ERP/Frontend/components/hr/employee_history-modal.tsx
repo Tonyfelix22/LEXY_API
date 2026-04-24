@@ -18,6 +18,8 @@ interface EmployeeHistoryModalProps {
     isOpen: boolean;
     onClose: () => void;
     employees: Employee[];
+    admins?: any[];
+    departments?: any[];
     onSubmit: (formData: any) => void;
 }
 
@@ -39,6 +41,8 @@ export default function EmployeeHistoryModal({
     isOpen,
     onClose,
     employees,
+    admins = [],
+    departments = [],
     onSubmit,
 }: EmployeeHistoryModalProps) {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -82,9 +86,11 @@ export default function EmployeeHistoryModal({
             return;
         }
 
+        const prevDeptId = departments.find(d => d.name === selectedEmployee?.department_name)?.id || null;
+
         onSubmit({
             ...formData,
-            previous_department: selectedEmployee?.department_name,
+            previous_department: prevDeptId,
             previous_job_title: selectedEmployee?.job_title,
             previous_salary: selectedEmployee?.basic_salary,
             previous_status: selectedEmployee?.status,
@@ -174,7 +180,7 @@ export default function EmployeeHistoryModal({
                             <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
                                 <p><strong>Dept:</strong> {selectedEmployee.department_name}</p>
                                 <p><strong>Job:</strong> {selectedEmployee.job_title}</p>
-                                <p><strong>Salary:</strong> ${selectedEmployee.basic_salary.toFixed(2)}</p>
+                                <p><strong>Salary:</strong> ${Number(selectedEmployee.basic_salary).toFixed(2)}</p>
                                 <p><strong>Status:</strong> {selectedEmployee.status}</p>
                             </div>
                         </div>
@@ -182,13 +188,19 @@ export default function EmployeeHistoryModal({
 
                     {/* New values */}
                     <div className="grid grid-cols-2 gap-3">
-                        <input
+                        <select
                             name="new_department"
-                            placeholder="New Department"
                             value={formData.new_department}
                             onChange={handleChange}
-                            className="px-3 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                        />
+                            className="px-3 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        >
+                            <option value="">Select New Department...</option>
+                            {departments.map((dept: any) => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.name}
+                                </option>
+                            ))}
+                        </select>
                         <input
                             name="new_job_title"
                             placeholder="New Job Title"
@@ -233,13 +245,19 @@ export default function EmployeeHistoryModal({
                         rows={2}
                         className="w-full px-3 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
                     />
-                    <input
+                    <select
                         name="approved_by"
-                        placeholder="Approved By"
                         value={formData.approved_by}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                    />
+                        className="w-full px-3 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    >
+                        <option value="">Select Approver</option>
+                        {admins.map(admin => (
+                            <option key={admin.id || admin.username} value={admin.username}>
+                                {admin.first_name && admin.last_name ? `${admin.first_name} ${admin.last_name}` : admin.username} ({admin.role || admin.profile?.role || "Admin"})
+                            </option>
+                        ))}
+                    </select>
 
                     <div className="flex justify-end gap-3 border-t border-sky-400/30 pt-4">
                         <button

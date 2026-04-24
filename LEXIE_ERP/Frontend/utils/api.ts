@@ -18,17 +18,24 @@ export async function apiFetch(
 ): Promise<any> {
     const base = await getBaseUrl();
     let url: string;
-    
+
     if (endpoint.startsWith("http")) {
         url = endpoint;
     } else {
-        // Remove trailing slash from base and leading slash from endpoint to avoid double slashes
-        const cleanBase = base.replace(/\/+$/, ""); // Remove multiple trailing slashes
+        // Remove leading slash from endpoint if base already has trailing/specified handling
+        const cleanBase = base.replace(/\/+$/, "");
         const cleanEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
         url = `${cleanBase}/${cleanEndpoint}`;
-        
-        // Additional normalization: replace any double slashes in the final URL
-        url = url.replace(/\/+/g, "/");
+
+        // Normalize the path part ONLY (after the protocol)
+        const protocolMatch = url.match(/^(https?:\/\/)/);
+        if (protocolMatch) {
+            const protocol = protocolMatch[1];
+            const pathPart = url.substring(protocol.length);
+            url = protocol + pathPart.replace(/\/+/g, "/");
+        } else {
+            url = url.replace(/\/+/g, "/");
+        }
     }
 
     const token = getAuthToken();
@@ -55,7 +62,24 @@ export async function apiFetch(
 
         if (!response.ok) {
             const text = await response.text();
-            throw new Error(`API error ${response.status}: ${text}`);
+            let errorMessage = text;
+            try {
+                const json = JSON.parse(text);
+                if (typeof json === 'object' && json !== null) {
+                    const messages = Object.entries(json).map(([key, value]) => {
+                        const valStr = Array.isArray(value) ? value[0] : value;
+                        return key === 'detail' || key === 'non_field_errors' || key === 'error' 
+                            ? valStr 
+                            : `${key.replace(/_/g, ' ')}: ${valStr}`;
+                    });
+                    if (messages.length > 0) {
+                        errorMessage = messages.join(' | ');
+                    }
+                }
+            } catch (e) {
+                errorMessage = `API error ${response.status}: ${text}`;
+            }
+            throw new Error(errorMessage);
         }
 
         try {

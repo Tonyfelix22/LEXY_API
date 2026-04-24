@@ -177,15 +177,59 @@ class EmploymentHistory(models.Model):
 
         if is_new:
             employee = self.employee
-            if self.new_department:
+            changes = []
+
+            if self.new_department and self.new_department != employee.department:
+                changes.append(f"Department changed to {self.new_department.name}")
                 employee.department = self.new_department
-            if self.new_job_title:
+                
+                # Sycn the legacy UserProfile department string if present
+                if hasattr(employee, 'user') and employee.user and hasattr(employee.user, 'profile'):
+                    employee.user.profile.department = self.new_department.name
+                    employee.user.profile.save()
+
+            if self.new_job_title and self.new_job_title != employee.job_title:
+                changes.append(f"Job Title changed to {self.new_job_title}")
                 employee.job_title = self.new_job_title
-            if self.new_salary:
+
+            if self.new_salary and self.new_salary != employee.basic_salary:
+                changes.append("Salary has been updated")
                 employee.basic_salary = self.new_salary
-            if self.new_status:
+
+            if self.new_status and self.new_status != employee.status:
+                changes.append(f"Status changed to {self.new_status}")
                 employee.status = self.new_status
+
             employee.save()
+
+            # Send Email Notification to Employee
+            if changes and employee.email:
+                subject = "Notice of Change in Employment Details"
+                message_body = (
+                    f"Dear {employee.first_name},\n\n"
+                    f"This is an official notification that changes have been made to your employment profile. "
+                    f"The following details have recently been updated:\n\n"
+                )
+                for change in changes:
+                    message_body += f"- {change}\n"
+                
+                message_body += (
+                    f"\nReason: {self.reason or 'Not Specified'}\n\n"
+                    f"If you have any questions about these changes, please contact Human Resources.\n\n"
+                    f"Best Regards,\n"
+                    f"Human Resources\n"
+                )
+                
+                try:
+                    send_mail(
+                        subject,
+                        message_body,
+                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@lexie.com'),
+                        [employee.email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    print(f"Failed to send email notification to employee: {e}")
 
 
 # ========================

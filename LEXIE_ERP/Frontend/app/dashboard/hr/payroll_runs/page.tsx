@@ -100,12 +100,41 @@ export default function PayrollPage() {
         <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-primary">Payroll Management</h1>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition"
-                >
-                    Create Payroll Run
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={async () => {
+                            const today = new Date()
+                            const start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
+                            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0]
+                            
+                            if (!confirm(`Generate payroll drafts for all active employees for ${today.toLocaleString('default', { month: 'long', year: 'numeric' })}?`)) return
+
+                            setLoading(true)
+                            try {
+                                const res = await api('/hr/payroll_runs/generate_monthly_payroll/', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ period_start: start, period_end: end })
+                                })
+                                toast.success(res.message || "Payroll drafts generated")
+                                fetchPayrollRuns()
+                            } catch (error) {
+                                console.error(error)
+                                toast.error("Failed to generate payroll")
+                            } finally {
+                                setLoading(false)
+                            }
+                        }}
+                        className="bg-secondary text-secondary-foreground border border-border px-4 py-2 rounded-lg hover:bg-secondary/90 transition"
+                    >
+                        Bulk Generate
+                    </button>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition"
+                    >
+                        Create Payroll Run
+                    </button>
+                </div>
             </div>
 
             {loading ? (

@@ -6,7 +6,7 @@ import { ChevronDown, Trash2 } from 'lucide-react';
 interface EmployeeInfo {
     id: number;
     staff_number: string;
-    name: string;
+    full_name: string;
 }
 
 interface EmploymentRecord {
@@ -14,10 +14,12 @@ interface EmploymentRecord {
     employee: EmployeeInfo;
     effective_date: string;
     change_type: string;
-    previous_department?: string;
+    previous_department?: number;
+    previous_department_name?: string;
     previous_job_title?: string;
     previous_salary?: number;
-    new_department?: string;
+    new_department?: number;
+    new_department_name?: string;
     new_job_title?: string;
     new_salary?: number;
     reason?: string;
@@ -78,7 +80,7 @@ export default function EmploymentHistoryTable({
                             <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
                                     <p className="font-semibold text-white">
-                                        {record.employee.staff_number} — {record.employee.name}
+                                        {record.employee.staff_number} — {record.employee.full_name}
                                     </p>
                                     <span className="text-sm text-sky-400">{record.change_type}</span>
                                 </div>
@@ -117,7 +119,7 @@ export default function EmploymentHistoryTable({
                                         <div className="mt-2 space-y-1 text-sm text-slate-300">
                                             <p>
                                                 <span className="text-slate-500">Department:</span>{' '}
-                                                {record.previous_department || '-'}
+                                                {record.previous_department_name || '-'}
                                             </p>
                                             <p>
                                                 <span className="text-slate-500">Job Title:</span>{' '}
@@ -137,7 +139,7 @@ export default function EmploymentHistoryTable({
                                         <div className="mt-2 space-y-1 text-sm text-slate-300">
                                             <p>
                                                 <span className="text-slate-500">Department:</span>{' '}
-                                                {record.new_department || '-'}
+                                                {record.new_department_name || '-'}
                                             </p>
                                             <p>
                                                 <span className="text-slate-500">Job Title:</span>{' '}

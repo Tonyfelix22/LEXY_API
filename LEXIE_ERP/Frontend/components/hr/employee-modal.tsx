@@ -9,6 +9,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Input as StandardInput } from "@/components/ui/input"
@@ -179,6 +180,9 @@ export default function EmployeeModal({
                     <DialogTitle>
                         {employee ? "Edit Employee" : "Add Employee"}
                     </DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Use this form to {employee ? "edit the details of an existing" : "add a new"} employee. Note that staff numbers are automatically generated for new employees.
+                    </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     {/* --- Section: User Account (New Employee Only) --- */}

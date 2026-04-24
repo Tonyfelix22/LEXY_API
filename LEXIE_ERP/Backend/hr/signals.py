@@ -106,10 +106,10 @@ def auto_post_to_finance(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Employee)
 def auto_create_payroll_for_new_employee(sender, instance, created, **kwargs):
     """
-    Automatically creates a payroll record when a new ACTIVE employee is added.
-    Prevents duplicate payrolls for the same period.
+    Automatically creates a payroll record when an ACTIVE employee is added or updated.
+    Checks if a payroll already exists for the current month.
     """
-    if not created or instance.status != "ACTIVE":
+    if instance.status != "ACTIVE" or not instance.basic_salary or instance.basic_salary <= 0:
         return
 
     try:
@@ -117,29 +117,28 @@ def auto_create_payroll_for_new_employee(sender, instance, created, **kwargs):
         start_date = today.replace(day=1)
         end_date = (start_date + relativedelta(months=1)) - timedelta(days=1)
 
-        payroll, created_payroll = PayrollRun.objects.get_or_create(
+        # Check if payroll already exists for this period
+        if PayrollRun.objects.filter(employee=instance, period_start=start_date, period_end=end_date).exists():
+            return
+
+        payroll = PayrollRun.objects.create(
             employee=instance,
             period_start=start_date,
             period_end=end_date,
-            defaults={
-                "status": "DRAFT",
-                "basic_salary": instance.basic_salary or 0,
-                "allowances": 0,
-                "overtime": 0,
-                "gross_salary": instance.basic_salary or 0,
-                "paye_tax": 0,
-                "nssf_deduction": 0,
-                "sha_deduction": 0,
-                "other_deductions": 0,
-                "total_deductions": 0,
-                "net_salary": instance.basic_salary or 0,
-            },
+            status="DRAFT",
+            basic_salary=instance.basic_salary,
+            allowances=0,
+            overtime=0,
+            gross_salary=instance.basic_salary,
+            paye_tax=0,
+            nssf_deduction=0,
+            sha_deduction=0,
+            other_deductions=0,
+            total_deductions=0,
+            net_salary=instance.basic_salary,
         )
 
-        if created_payroll:
-            logger.info(f"✅ Payroll initialized for {instance.get_full_name()} (Employee ID {instance.id})")
-        else:
-            logger.warning(f"⚠️ Payroll already exists for {instance.get_full_name()} (Employee ID {instance.id})")
+        logger.info(f"✅ Payroll initialized for {instance.get_full_name()} (Employee ID {instance.id})")
 
         # 🧾 Send audit record for payroll creation
         audit_payload = {

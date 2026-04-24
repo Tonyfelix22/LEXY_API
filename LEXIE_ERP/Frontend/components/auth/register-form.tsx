@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/auth-context";
 import { getAuthToken } from "@/utils/token";
+import { Lock, User, Mail, ArrowRight, UserPlus, Shield } from "lucide-react";
 
 export default function RegisterForm() {
     const router = useRouter();
@@ -112,168 +113,251 @@ export default function RegisterForm() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950">
-            <div className="w-full max-w-md bg-slate-900 border border-sky-400/30 rounded-lg shadow-xl p-8">
-                <h1 className="text-3xl font-bold text-center mb-2 text-white">
-                    {isSuperAdmin ? "Create Admin Account" : (isHRAdmin ? "Create Employee Account" : "Create Account")}
-                </h1>
-                <p className="text-center text-gray-400 mb-8">
-                    {isSuperAdmin ? "Register a new Department Admin" : (isHRAdmin ? "Register a new Employee" : "Join LEXIE ERP Platform")}
-                </p>
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+            {/* Animated Background */}
+            <div className="fixed inset-0 gradient-mesh animate-gradient opacity-40"></div>
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Username */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-200">
-                            Username
-                        </label>
-                        <input
-                            name="username"
-                            type="text"
-                            value={formData.username}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                            placeholder="Enter username"
-                            required
-                        />
+            {/* Register Card */}
+            <div className="relative z-10 w-full max-w-md mx-4 animate-fadeIn">
+                {/* Logo */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-xl shadow-primary/30 mb-4 animate-pulse-glow">
+                        <UserPlus className="w-8 h-8 text-white" />
                     </div>
+                    <h1 className="text-4xl font-bold text-gradient mb-2">
+                        {isSuperAdmin ? "Create Admin" : (isHRAdmin ? "Create Employee" : "Join LEXIE")}
+                    </h1>
+                    <p className="text-foreground/60">
+                        {isSuperAdmin ? "Register a new Department Admin" : (isHRAdmin ? "Register a new Employee" : "Create your account")}
+                    </p>
+                </div>
 
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-200">
-                            Email
-                        </label>
-                        <input
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                            placeholder="Enter email"
-                            required
-                        />
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-200">
-                            Password
-                        </label>
-                        <input
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                            placeholder="Enter password"
-                            required
-                        />
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-200">
-                            Confirm Password
-                        </label>
-                        <input
-                            name="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400 placeholder-gray-500"
-                            placeholder="Confirm password"
-                            required
-                        />
-                    </div>
-
-                    {/* Role - Only visible to Super Admin */}
-                    {isSuperAdmin && (
+                {/* Glass Card Form */}
+                <div className="glass-card rounded-2xl p-8 shadow-2xl">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Username */}
                         <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-200">
-                                Role
+                            <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                Username
                             </label>
-                            <select
-                                name="role"
-                                value={formData.role}
-                                onChange={(e) => {
-                                    const role = e.target.value;
-                                    let department = "";
-                                    if (role === "hr") department = "Human Resources";
-                                    if (role === "finance") department = "Finance";
-                                    if (role === "audit") department = "Audit";
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    name="username"
+                                    type="text"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Enter username"
+                                    required
+                                />
+                            </div>
+                        </div>
 
-                                    setFormData((prev) => ({ ...prev, role, department }));
-                                }}
-                                className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-                                required
-                            >
-                                <option value="" disabled>Select a role</option>
-                                <option value="hr">HR Admin</option>
-                                <option value="finance">Finance Admin</option>
-                                <option value="audit">Audit Admin</option>
-                            </select>
-                            <p className="text-xs text-gray-400 mt-1">
-                                Department will be auto-assigned based on your role
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                Email
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Enter email"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                Password
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    name="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Enter password"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                Confirm Password
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                </div>
+                                <input
+                                    name="confirmPassword"
+                                    type="password"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50"
+                                    placeholder="Confirm password"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        {/* Role - Only visible to Super Admin */}
+                        {isSuperAdmin && (
+                            <div>
+                                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                    Role
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Shield className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                    </div>
+                                    <select
+                                        name="role"
+                                        value={formData.role}
+                                        onChange={(e) => {
+                                            const role = e.target.value;
+                                            let department = "";
+                                            if (role === "hr") department = "Human Resources";
+                                            if (role === "finance") department = "Finance";
+                                            if (role === "audit") department = "Audit";
+
+                                            setFormData((prev) => ({ ...prev, role, department }));
+                                        }}
+                                        className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50 appearance-none cursor-pointer"
+                                        required
+                                    >
+                                        <option value="" disabled>Select a role</option>
+                                        <option value="hr">HR Admin</option>
+                                        <option value="finance">Finance Admin</option>
+                                        <option value="audit">Audit Admin</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-foreground/40">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-foreground/50 mt-2">
+                                    Department will be auto-assigned based on your role
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Department Selection - Visible for HR Admin creating Employees */}
+                        {isHRAdmin && !isSuperAdmin && (
+                            <div>
+                                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                    Department
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Shield className="h-5 w-5 text-foreground/40 group-focus-within:text-primary transition-colors" />
+                                    </div>
+                                    <select
+                                        name="department"
+                                        value={formData.department}
+                                        onChange={handleChange}
+                                        className="w-full pl-12 pr-4 py-3 bg-card/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all-smooth hover:border-primary/50 appearance-none cursor-pointer"
+                                        required
+                                    >
+                                        <option value="" disabled>Select Department</option>
+                                        <option value="Human Resources">Human Resources</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Audit">Audit</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-foreground/40">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Department (Auto-assigned) - Only visible if role selected by Super Admin */}
+                        {isSuperAdmin && formData.role && (
+                            <div>
+                                <label className="block text-sm font-medium text-foreground/80 mb-2">
+                                    Department
+                                </label>
+                                <input
+                                    name="department"
+                                    type="text"
+                                    value={formData.department}
+                                    readOnly
+                                    className="w-full px-4 py-3 border border-border/50 rounded-xl bg-card/30 text-foreground/50 cursor-not-allowed"
+                                    placeholder="Auto-assigned based on role"
+                                />
+                            </div>
+                        )}
+
+                        {/* Submit */}
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 rounded-xl transition-all-smooth disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 hover:shadow-primary/50 hover-lift flex items-center justify-center gap-2 group"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground"></div>
+                                    <span>Registering...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>{isSuperAdmin ? "Create User" : "Register"}</span>
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+
+                        {!user && (
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-border/50"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-4 bg-card text-foreground/60">or</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {!user && (
+                            <p className="text-center text-sm text-foreground/60">
+                                Already have an account?{" "}
+                                <a href="/login" className="text-primary font-bold hover:text-primary/80 hover:underline transition-all-smooth">
+                                    Login here
+                                </a>
                             </p>
-                        </div>
-                    )}
+                        )}
+                    </form>
+                </div>
 
-                    {/* Department Selection - Visible for HR Admin creating Employees */}
-                    {isHRAdmin && !isSuperAdmin && (
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-200">
-                                Department
-                            </label>
-                            <select
-                                name="department"
-                                value={formData.department}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 bg-slate-800 border border-sky-400/30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-400"
-                                required
-                            >
-                                <option value="" disabled>Select Department</option>
-                                <option value="Human Resources">Human Resources</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Audit">Audit</option>
-                            </select>
-                        </div>
-                    )}
-
-                    {/* Department (Auto-assigned) - Only visible if role selected by Super Admin */}
-                    {isSuperAdmin && formData.role && (
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-gray-200">
-                                Department
-                            </label>
-                            <input
-                                name="department"
-                                type="text"
-                                value={formData.department}
-                                readOnly
-                                className="w-full px-4 py-2 border border-sky-400/20 rounded-lg bg-slate-800/50 text-gray-400 cursor-not-allowed"
-                                placeholder="Auto-assigned based on role"
-                            />
-                        </div>
-                    )}
-
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-sky-500 text-white rounded-lg py-2 font-medium hover:bg-sky-600 transition disabled:opacity-50"
-                    >
-                        {isLoading ? "Registering..." : (isSuperAdmin ? "Create User" : "Register")}
-                    </button>
-
-                    {!user && (
-                        <p className="text-center text-sm text-gray-400 mt-4">
-                            Already have an account?{" "}
-                            <a href="/login" className="text-sky-400 hover:underline">
-                                Login
-                            </a>
-                        </p>
-                    )}
-                </form>
+                {/* Footer */}
+                <div className="text-center mt-6">
+                    <p className="text-xs text-foreground/40">
+                        © {new Date().getFullYear()} LEXIE ERP. All rights reserved.
+                    </p>
+                </div>
             </div>
         </div>
     );

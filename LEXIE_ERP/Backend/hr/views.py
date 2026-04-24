@@ -138,7 +138,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 # =====================================================
 # EMPLOYMENT HISTORY VIEWSET
 # =====================================================
-class EmploymentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+class EmploymentHistoryViewSet(viewsets.ModelViewSet):
     queryset = EmploymentHistory.objects.all()
     serializer_class = EmploymentHistorySerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -147,6 +147,9 @@ class EmploymentHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['employee', 'change_type', 'effective_date']
     ordering_fields = ['effective_date', 'created_at']
     ordering = ['-effective_date']
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user.username)
 
 
 # =====================================================
@@ -231,6 +234,47 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
             'status_breakdown': status_breakdown,
         }
         return Response(PayrollSummarySerializer(summary).data)
+
+    @action(detail=False, methods=['post'])
+    def generate_monthly_payroll(self, request):
+        period_start = request.data.get('period_start')
+        period_end = request.data.get('period_end')
+        
+        if not period_start or not period_end:
+            return Response({'error': 'period_start and period_end are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        active_employees = Employee.objects.filter(status='ACTIVE', basic_salary__gt=0)
+        created_count = 0
+        skipped_count = 0
+
+        for emp in active_employees:
+            if PayrollRun.objects.filter(employee=emp, period_start=period_start, period_end=period_end).exists():
+                skipped_count += 1
+                continue
+            
+            PayrollRun.objects.create(
+                employee=emp,
+                period_start=period_start,
+                period_end=period_end,
+                status='DRAFT',
+                basic_salary=emp.basic_salary,
+                allowances=0,
+                overtime=0,
+                gross_salary=emp.basic_salary,
+                paye_tax=0,
+                nssf_deduction=0,
+                sha_deduction=0,
+                other_deductions=0,
+                total_deductions=0,
+                net_salary=emp.basic_salary
+            )
+            created_count += 1
+
+        return Response({
+            'message': f'Successfully generated {created_count} payroll drafts. {skipped_count} already existed.',
+            'created_count': created_count,
+            'skipped_count': skipped_count
+        }, status=status.HTTP_201_CREATED)
 
 
 # =====================================================

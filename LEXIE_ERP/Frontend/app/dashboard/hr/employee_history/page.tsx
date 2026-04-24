@@ -11,8 +11,8 @@ import { apiFetch } from "@/utils/api"
 interface Employee {
     id: number
     staff_number: string
-    name: string
-    department: string
+    full_name: string
+    department_name: string
     job_title: string
     basic_salary: number
     status: string
@@ -23,11 +23,13 @@ interface EmploymentRecord {
     employee: Employee
     effective_date: string
     change_type: string
-    previous_department?: string
+    previous_department?: number
+    previous_department_name?: string
     previous_job_title?: string
     previous_salary?: number
     previous_status?: string
-    new_department?: string
+    new_department?: number
+    new_department_name?: string
     new_job_title?: string
     new_salary?: number
     new_status?: string
@@ -42,6 +44,8 @@ export default function EmployeeHistoryPage() {
     const { token, isHRAdmin } = useAuth()
     const [historyRecords, setHistoryRecords] = useState<EmploymentRecord[]>([])
     const [employees, setEmployees] = useState<Employee[]>([])
+    const [admins, setAdmins] = useState<any[]>([])
+    const [departments, setDepartments] = useState<any[]>([])
     const [expandedId, setExpandedId] = useState<number | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -61,7 +65,7 @@ export default function EmployeeHistoryPage() {
     const loadData = async () => {
         setLoading(true)
         try {
-            await Promise.all([fetchEmployees(), fetchEmploymentHistory()])
+            await Promise.all([fetchEmployees(), fetchEmploymentHistory(), fetchAdmins(), fetchDepartments()])
         } catch (err: any) {
             console.error("Error loading HR data:", err)
             setError(err.message || "Failed to load HR data.")
@@ -99,6 +103,37 @@ export default function EmployeeHistoryPage() {
         }
     }
 
+    // ✅ Fetch Admins
+    const fetchAdmins = async () => {
+        try {
+            const data = await apiFetch("/users/", {
+                headers: { Authorization: `Token ${token}` },
+            })
+            const users = data.results || data
+            const adminUsers = users.filter((u: any) => 
+                u.is_superuser || 
+                ["ADMIN", "HR", "MANAGER"].includes(u.profile?.role?.toUpperCase() || "")
+            )
+            setAdmins(adminUsers)
+        } catch (err: any) {
+            console.error("Error fetching admins:", err)
+            setAdmins([])
+        }
+    }
+
+    // ✅ Fetch Departments
+    const fetchDepartments = async () => {
+        try {
+            const data = await apiFetch("/hr/departments/", {
+                headers: { Authorization: `Token ${token}` },
+            })
+            setDepartments(data.results || data)
+        } catch (err: any) {
+            console.error("Error fetching departments:", err)
+            setDepartments([])
+        }
+    }
+
     // ✅ Create a new record
     const handleCreateRecord = async (formData: Record<string, string>) => {
         try {
@@ -112,7 +147,7 @@ export default function EmployeeHistoryPage() {
                     ? parseFloat(formData.previous_salary)
                     : null,
                 previous_status: formData.previous_status || null,
-                new_department: formData.new_department || null,
+                new_department: formData.new_department ? parseInt(formData.new_department) : null,
                 new_job_title: formData.new_job_title || null,
                 new_salary: formData.new_salary
                     ? parseFloat(formData.new_salary)
@@ -226,6 +261,8 @@ export default function EmployeeHistoryPage() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 employees={employees}
+                admins={admins}
+                departments={departments}
                 onSubmit={handleCreateRecord}
             />
         </div>

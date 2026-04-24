@@ -1,20 +1,16 @@
 import os
-import urllib.parse
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 
-# Environment settings
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# Base settings
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
-# Frontend URL
 FRONTEND_URL = os.getenv('FRONTEND_URL', None)
 
-# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -35,10 +31,10 @@ INSTALLED_APPS = [
     'notifications',
 ]
 
-# Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -48,11 +44,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# URL configuration
 ROOT_URLCONF = 'LEXY_API.urls'
 WSGI_APPLICATION = 'LEXY_API.wsgi.application'
 
-# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -69,19 +63,30 @@ TEMPLATES = [
     },
 ]
 
-# Database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'LEXYDB'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
-}
+# Database
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 
-# CORS configuration
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'LEXYDB'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'Password26'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
+
+# CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
@@ -91,7 +96,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3002",
 ]
 
-# Add frontend URL from environment
 if FRONTEND_URL:
     for url in FRONTEND_URL.split(','):
         url = url.strip()
@@ -100,8 +104,6 @@ if FRONTEND_URL:
                 CORS_ALLOWED_ORIGINS.append(url)
             else:
                 CORS_ALLOWED_ORIGINS.extend([f"https://{url}", f"http://{url}"])
-
-CORS_ALLOWED_ORIGIN_REGEXES = []
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -115,24 +117,14 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 
-CORS_ALLOW_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-]
-
-# CSRF configuration
+# CSRF
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:3002",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:3002",
 ]
 
 if FRONTEND_URL:
@@ -162,13 +154,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-        "users.permissions.SuperuserGlobalAccess",
+        'users.permissions.SuperuserGlobalAccess',
     ),
 }
 
 AUTH_USER_MODEL = 'auth.User'
 
-# JWT settings
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
@@ -183,7 +174,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# Email configuration
+# Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -193,8 +184,8 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 # Static files
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-print(f"DATABASE HOST: {DATABASES['default']['HOST']}")
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
