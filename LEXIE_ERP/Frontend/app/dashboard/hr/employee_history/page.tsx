@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Plus } from "lucide-react"
 import toast from "react-hot-toast"
 import EmploymentHistoryTable from "@/components/hr/employee_history-table"
@@ -60,9 +60,9 @@ export default function EmployeeHistoryPage() {
             return
         }
         loadData()
-    }, [token])
+    }, [token, isHRAdmin, loadData])
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true)
         try {
             await Promise.all([fetchEmployees(), fetchEmploymentHistory(), fetchAdmins(), fetchDepartments()])
@@ -73,10 +73,10 @@ export default function EmployeeHistoryPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [fetchEmployees, fetchEmploymentHistory, fetchAdmins, fetchDepartments])
 
     // ✅ Fetch Employees
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         try {
             const data = await apiFetch("/hr/employees/", {
                 headers: { Authorization: `Token ${token}` },
@@ -87,10 +87,10 @@ export default function EmployeeHistoryPage() {
             setError(`Failed to load employees: ${err.message}`)
             setEmployees([])
         }
-    }
+    }, [token])
 
     // ✅ Fetch Employment History
-    const fetchEmploymentHistory = async () => {
+    const fetchEmploymentHistory = useCallback(async () => {
         try {
             const data = await apiFetch("/hr/employment-history/", {
                 headers: { Authorization: `Token ${token}` },
@@ -101,10 +101,10 @@ export default function EmployeeHistoryPage() {
             setError(`Failed to load employment history: ${err.message}`)
             setHistoryRecords([])
         }
-    }
+    }, [token])
 
     // ✅ Fetch Admins
-    const fetchAdmins = async () => {
+    const fetchAdmins = useCallback(async () => {
         try {
             const data = await apiFetch("/users/", {
                 headers: { Authorization: `Token ${token}` },
@@ -119,10 +119,10 @@ export default function EmployeeHistoryPage() {
             console.error("Error fetching admins:", err)
             setAdmins([])
         }
-    }
+    }, [token])
 
     // ✅ Fetch Departments
-    const fetchDepartments = async () => {
+    const fetchDepartments = useCallback(async () => {
         try {
             const data = await apiFetch("/hr/departments/", {
                 headers: { Authorization: `Token ${token}` },
@@ -132,7 +132,7 @@ export default function EmployeeHistoryPage() {
             console.error("Error fetching departments:", err)
             setDepartments([])
         }
-    }
+    }, [token])
 
     // ✅ Create a new record
     const handleCreateRecord = async (formData: Record<string, string>) => {

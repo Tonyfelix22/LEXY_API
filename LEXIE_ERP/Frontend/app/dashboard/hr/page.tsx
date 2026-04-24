@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { useAuth } from "@/context/auth-context"
 import { LayoutGrid, List, Users, CheckCircle, Calendar, ArrowRight, CreditCard, Briefcase } from "lucide-react"
@@ -38,9 +38,9 @@ export default function HRDashboard() {
             setLoading(false)
             if (!isHRAdmin) setError("Access denied: HR only")
         }
-    }, [token])
+    }, [token, isHRAdmin, fetchDashboardStats])
 
-    const fetchDashboardStats = async () => {
+    const fetchDashboardStats = useCallback(async () => {
         setLoading(true)
         setError(null)
 
@@ -80,7 +80,7 @@ export default function HRDashboard() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [token])
 
     const formatNumber = (num: number) =>
         new Intl.NumberFormat("en-US").format(num)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import toast from "react-hot-toast"
 import EmployeeTable from "@/components/hr/employee-table"
 import EmployeeModal from "@/components/hr/employee-modal"
@@ -46,16 +46,16 @@ export default function EmployeesPage() {
             setError("Access denied: HR Admins only.")
             setIsLoading(false)
         }
-    }, [page, token])
+    }, [page, token, isHRAdmin, fetchEmployees])
 
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         setIsLoading(true)
         setError(null)
         try {
             const data = await apiFetch(`/hr/employees/?page=${page}`, {
                 headers: { Authorization: `Token ${token}` },
             })
-
+ 
             const empList = data.results || data
             setEmployees(Array.isArray(empList) ? empList.map((e: any) => ({
                 ...e,
@@ -63,7 +63,7 @@ export default function EmployeesPage() {
                 // Ensure department_name is present if the API returns it, otherwise it might be missing
                 department_name: e.department_name || "—"
             })) : [])
-
+ 
             if (data.count) {
                 setTotalPages(Math.ceil(data.count / 10))
             } else {
@@ -77,7 +77,7 @@ export default function EmployeesPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [page, token])
 
     const handleSave = async (formData: any) => {
         try {
