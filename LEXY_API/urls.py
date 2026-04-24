@@ -34,13 +34,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # 🌐 App Endpoints
-    path('api/', include('API.urls')),
     path('api/finance/', include('Finance.urls')),
     path('api/users/', include('users.urls')),
     path('api/hr/', include('hr.urls')),
     path('api/audit/', include('audit.urls')),
     path('api/reports/', include('reports.urls')),
     path('api/notifications/', include('notifications.urls')),
+    path('api/', include('API.urls')),
 
     # 🛠️ DRF Auth for browseable API
     path('api-auth/', include('rest_framework.urls')),
