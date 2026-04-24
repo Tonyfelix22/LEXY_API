@@ -1,4 +1,14 @@
 import os
+
+# Prevent .env file from overriding Render environment variables
+# Render sets env vars directly; don't let local .env override them
+try:
+    from dotenv import load_dotenv
+    if not os.getenv('RENDER') and not os.getenv('RAILWAY_ENVIRONMENT'):
+        load_dotenv()
+except ImportError:
+    pass
+
 import dj_database_url
 from pathlib import Path
 from datetime import timedelta
@@ -64,8 +74,8 @@ TEMPLATES = [
     },
 ]
 
-# Database
-DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+# Database - Support both DATABASE_URL and Render's EXTERNAL_DATABASE_URL
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip() or os.getenv('EXTERNAL_DATABASE_URL', '').strip()
 DATABASE_URL = DATABASE_URL.replace('&channel_binding=require', '').replace('?channel_binding=require', '')
 
 if DATABASE_URL:
