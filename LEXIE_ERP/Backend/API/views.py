@@ -14,6 +14,23 @@ from .serializers import ProductSerializer
 
 
 # ------------------------------
+# Health Check API
+# ------------------------------
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    Standard health check endpoint.
+    """
+    return Response({
+        "status": "healthy",
+        "timestamp": timezone.now(),
+        "message": "LEXY ERP API is running smoothly"
+    }, status=status.HTTP_200_OK)
+
+
+
+# ------------------------------
 # Authentication / Login API
 # ------------------------------
 @csrf_exempt

@@ -10,6 +10,7 @@ router.register(r'products', ProductViewSet, basename='product')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('health/', views.health_check, name='health_check'),
     path('login/', views.login_api, name='login_api'),
     path('dashboard/stats/', views.DashboardStatsView.as_view(), name='dashboard_stats'),
 ]
