@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import toast from "react-hot-toast"
 import DepartmentTable from "@/components/hr/department-table"
 import DepartmentModal from "@/components/hr/department-modal"
@@ -35,10 +35,10 @@ export default function DepartmentsPage() {
             return
         }
         fetchDepartments()
-    }, [token])
+    }, [token, isHRAdmin, fetchDepartments])
 
     // ✅ Fetch all departments
-    const fetchDepartments = async () => {
+    const fetchDepartments = useCallback(async () => {
         setIsLoading(true)
         setError(null)
         try {
@@ -54,7 +54,7 @@ export default function DepartmentsPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [token])
 
     // ✅ Save or update a department
     const handleSave = async (formData: any) => {

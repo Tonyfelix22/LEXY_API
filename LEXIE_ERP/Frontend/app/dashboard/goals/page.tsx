@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/auth-context";
 import { performanceService, PerformanceGoal } from "@/services/performanceService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,9 +35,9 @@ export default function GoalsDashboard() {
         if (!authLoading && user) {
             fetchGoals();
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, fetchGoals]);
 
-    const fetchGoals = async () => {
+    const fetchGoals = useCallback(async () => {
         try {
             setLoading(true);
             // Fetch goals for the logged-in employee if they have an employee profile
@@ -50,7 +50,7 @@ export default function GoalsDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user?.employee?.id]);
 
     const handleCreateGoal = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -208,7 +208,7 @@ export default function GoalsDashboard() {
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-12 text-center">
                     <span className="material-symbols-outlined text-[48px] text-slate-500 mb-4 block">flag</span>
                     <h3 className="text-lg font-medium text-slate-300">No Goals Found</h3>
-                    <p className="text-slate-500 mt-2 max-w-md mx-auto">You haven't set any performance goals yet. Create a goal to start tracking your objectives and progress.</p>
+                    <p className="text-slate-500 mt-2 max-w-md mx-auto">You haven&apos;t set any performance goals yet. Create a goal to start tracking your objectives and progress.</p>
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
