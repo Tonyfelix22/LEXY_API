@@ -11,7 +11,9 @@ except ImportError:
 
 def main():
     """Run administrative tasks."""
-    load_dotenv(override=True)
+    # Only load .env file in development (Render env vars should take precedence)
+    if not os.getenv('RENDER'):
+        load_dotenv()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LEXY_API.settings')
     try:
         from django.core.management import execute_from_command_line
