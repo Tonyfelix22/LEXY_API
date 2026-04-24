@@ -12,7 +12,7 @@ interface Account {
     code: string
     name: string
     type: "ASSET" | "LIABILITY" | "EQUITY" | "INCOME" | "EXPENSE" // Updated to match Table
-    balance: number
+    balance: number | string
     parent?: number | null
     parent_name?: string
 }
