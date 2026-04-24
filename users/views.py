@@ -245,13 +245,16 @@ def login_user(request):
         return Response({"message": "Username and password are required."},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(username=username, password=password)
-    if user is None:
-        return Response({"message": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user = authenticate(username=username, password=password)
+        if user is None:
+            return Response({"message": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not user.is_active:
-        return Response({"message": "This account is inactive. Contact admin."},
-                        status=status.HTTP_403_FORBIDDEN)
+        if not user.is_active:
+            return Response({"message": "This account is inactive. Contact admin."},
+                            status=status.HTTP_403_FORBIDDEN)
+    except Exception as e:
+        return Response({"message": f"Database or Auth Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     try:
         token, _ = Token.objects.get_or_create(user=user)

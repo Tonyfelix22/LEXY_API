@@ -26,6 +26,16 @@ from rest_framework_simplejwt.views import (
 )
 
 from API.views import health_check
+from django.http import JsonResponse
+from django.db import connection
+
+def health(request):
+    try:
+        connection.ensure_connection()
+        return JsonResponse({'status': 'ok', 'db': 'connected'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'db': str(e)}, status=500)
+
 
 urlpatterns = [
     path('', health_check, name='root_health'),
@@ -34,13 +44,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # 🌐 App Endpoints
-    path('api/', include('API.urls')),
     path('api/finance/', include('Finance.urls')),
     path('api/users/', include('users.urls')),
     path('api/hr/', include('hr.urls')),
     path('api/audit/', include('audit.urls')),
     path('api/reports/', include('reports.urls')),
     path('api/notifications/', include('notifications.urls')),
+    path('api/', include('API.urls')),
 
     # 🛠️ DRF Auth for browseable API
     path('api-auth/', include('rest_framework.urls')),
