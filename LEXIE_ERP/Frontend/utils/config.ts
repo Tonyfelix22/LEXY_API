@@ -10,8 +10,8 @@ let configPromise: Promise<string> | null = null;
 export function getBaseUrl(): Promise<string> {
     if (typeof window === "undefined") {
         const envBase =
-            (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_API) ||
-            (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+            (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BASE_API) ||
+            (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
             DEFAULT_BASE;
         // Apply same cleaning logic server-side
         const cleanBase = envBase.replace(/\/+$/, "");
@@ -32,15 +32,15 @@ export function getBaseUrl(): Promise<string> {
                 return cachedBase;
             }
             cachedBase =
-                (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_API) ||
-                (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+                (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BASE_API) ||
+                (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
                 DEFAULT_BASE;
             return cachedBase;
         })
         .catch(() => {
             const fallbackBase = 
-                (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_BASE_API) ||
-                (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
+                (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BASE_API) ||
+                (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) ||
                 DEFAULT_BASE;
             // Apply same cleaning logic to fallback
             const cleanBase = fallbackBase.replace(/\/+$/, "");
