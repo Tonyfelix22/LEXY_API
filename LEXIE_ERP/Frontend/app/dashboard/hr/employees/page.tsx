@@ -39,15 +39,6 @@ export default function EmployeesPage() {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
     const [showModal, setShowModal] = useState(false)
 
-    useEffect(() => {
-        if (token && isHRAdmin) {
-            fetchEmployees()
-        } else if (!isHRAdmin) {
-            setError("Access denied: HR Admins only.")
-            setIsLoading(false)
-        }
-    }, [page, token, isHRAdmin, fetchEmployees])
-
     const fetchEmployees = useCallback(async () => {
         setIsLoading(true)
         setError(null)
@@ -78,6 +69,15 @@ export default function EmployeesPage() {
             setIsLoading(false)
         }
     }, [page, token])
+
+    useEffect(() => {
+        if (token && isHRAdmin) {
+            fetchEmployees()
+        } else if (!isHRAdmin) {
+            setError("Access denied: HR Admins only.")
+            setIsLoading(false)
+        }
+    }, [page, token, isHRAdmin, fetchEmployees])
 
     const handleSave = async (formData: any) => {
         try {
